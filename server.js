@@ -46,7 +46,7 @@ function ensureData() {
         category: "Cinema",
         emoji: "🎬",
         poster: "https://image.tmdb.org/t/p/w500/9C9PAnrZcB8x7YHNlBs4PUv0Z7K.jpg",
-        location: "Local Cinema",
+        location: "",
         date: "2026-07-16T19:00:00",
         notes: "Christopher Nolan's epic. Grab tickets early!"
       },
@@ -56,7 +56,7 @@ function ensureData() {
         category: "Cinema",
         emoji: "🕷️",
         poster: "https://image.tmdb.org/t/p/w500/yyB2VJEW3an2xCdcYCPQhn9QERR.jpg",
-        location: "Local Cinema",
+        location: "",
         date: "2026-07-29T19:00:00",
         notes: "Tom Holland is back!"
       }
