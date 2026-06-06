@@ -9,7 +9,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const DATA_DIR = path.join(__dirname, "data");
+// Data is stored on disk. On Railway, set DATA_DIR to a mounted Volume path
+// (e.g. /data) so events survive redeploys. Falls back to a local ./data folder.
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "data");
 const DATA_FILE = path.join(DATA_DIR, "events.json");
 
 app.use(express.json());
