@@ -300,9 +300,11 @@ devForm.addEventListener("submit", async (e) => {
 applyDevState();
 load();
 
-// Hide the splash screen after 2 seconds
+// Lock scrolling while the splash is up, then hide it after 2 seconds
+document.body.classList.add("splash-active");
 setTimeout(() => {
   const splash = document.getElementById("splash");
+  document.body.classList.remove("splash-active");
   if (splash) {
     splash.classList.add("hide");
     setTimeout(() => splash.remove(), 600);
