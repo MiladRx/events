@@ -1,7 +1,7 @@
 {
-  "name": "crew-events",
+  "name": "upcoming-events",
   "version": "1.0.0",
-  "description": "Mobile web app to track upcoming events with the crew",
+  "description": "Mobile web app to track upcoming events",
   "main": "server.js",
   "type": "module",
   "scripts": {

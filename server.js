@@ -48,7 +48,7 @@ function ensureData() {
         poster: "https://image.tmdb.org/t/p/w500/9C9PAnrZcB8x7YHNlBs4PUv0Z7K.jpg",
         location: "Local Cinema",
         date: "2026-07-16T19:00:00",
-        notes: "Christopher Nolan's epic. Crew night out — grab tickets early!"
+        notes: "Christopher Nolan's epic. Grab tickets early!"
       },
       {
         id: "spiderman-bnd-2026",
@@ -58,7 +58,7 @@ function ensureData() {
         poster: "https://image.tmdb.org/t/p/w500/yyB2VJEW3an2xCdcYCPQhn9QERR.jpg",
         location: "Local Cinema",
         date: "2026-07-29T19:00:00",
-        notes: "Tom Holland is back. Crew night out!"
+        notes: "Tom Holland is back!"
       }
     ];
     fs.writeFileSync(DATA_FILE, JSON.stringify(seed, null, 2));
@@ -146,5 +146,5 @@ app.delete("/api/events/:id", requireDev, (req, res) => {
 app.get("/healthz", (_req, res) => res.json({ ok: true }));
 
 app.listen(PORT, () => {
-  console.log(`Crew Events running on port ${PORT}`);
+  console.log(`Upcoming Events running on port ${PORT}`);
 });

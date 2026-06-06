@@ -1,7 +1,7 @@
 {
-  "name": "Crew · Upcoming Events",
-  "short_name": "Crew",
-  "description": "Track upcoming events with the crew",
+  "name": "Upcoming",
+  "short_name": "Upcoming",
+  "description": "Track upcoming events",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#05060a",

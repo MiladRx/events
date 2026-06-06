@@ -1,6 +1,6 @@
-# Crew · Upcoming Events
+# Upcoming · Events
 
-A mobile-first web app to track upcoming events with your group. Built with an iOS 26 "Liquid Glass" look — frosted glass cards, ambient aurora background, and a live countdown to your next event.
+A mobile-first web app to track upcoming events. Built with an iOS 26 "Liquid Glass" look — frosted glass cards and a live countdown to your next event.
 
 First event seeded: **The Odyssey** 🎬 (16 July 2026).
 
