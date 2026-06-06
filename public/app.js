@@ -76,7 +76,7 @@ function render() {
     const past = new Date(e.date) < new Date();
     li.style.opacity = past ? "0.5" : "1";
     const thumb = e.poster
-      ? `<img class="card-poster" src="${escapeHtml(e.poster)}" alt="" loading="lazy" onerror="this.outerHTML='<div class=&quot;card-emoji&quot;>${e.emoji || "📅"}</div>'" />`
+      ? `<img class="card-poster" src="${escapeHtml(e.poster)}" alt="" decoding="async" onload="this.classList.add('loaded')" onerror="this.outerHTML='<div class=&quot;card-emoji&quot;>${e.emoji || "📅"}</div>'" />`
       : `<div class="card-emoji">${e.emoji || "📅"}</div>`;
     li.innerHTML = `
       ${thumb}
@@ -299,3 +299,12 @@ devForm.addEventListener("submit", async (e) => {
 
 applyDevState();
 load();
+
+// Hide the splash screen after 2 seconds
+setTimeout(() => {
+  const splash = document.getElementById("splash");
+  if (splash) {
+    splash.classList.add("hide");
+    setTimeout(() => splash.remove(), 600);
+  }
+}, 2000);
