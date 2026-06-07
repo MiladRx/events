@@ -24,7 +24,6 @@ html, body {
 }
 html {
   background: var(--bg);
-  height: 100%;
 }
 body {
   -webkit-font-smoothing: antialiased;
@@ -37,7 +36,7 @@ body {
 .app {
   max-width: 520px;
   margin: 0 auto;
-  padding: calc(var(--safe-top) + 18px) 18px calc(var(--safe-bottom) + 40px);
+  padding: calc(var(--safe-top) + 18px) 18px calc(var(--safe-bottom) + 80px);
   min-height: 100vh;
 }
 
@@ -388,7 +387,7 @@ textarea { resize: none; }
   transition: opacity 0.5s ease, visibility 0.5s ease;
 }
 /* Lock the page while the splash is showing */
-body.splash-active { overflow: hidden; height: 100dvh; }
+body.splash-active { overflow: hidden; }
 .splash.hide {
   opacity: 0;
   visibility: hidden;
