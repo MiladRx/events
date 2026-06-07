@@ -438,11 +438,27 @@ function openDetail(e) {
   detailModal.hidden = false;
   document.body.style.overflow = "hidden";
 
-  // If it has a TMDB id, fetch rich details
+  // If it has a TMDB id, fetch rich details. Otherwise try resolving by title.
   if (e.tmdbId) {
     document.getElementById("detailLoading").hidden = false;
     loadMovieDetails(e.tmdbId);
   } else {
+    document.getElementById("detailLoading").hidden = false;
+    resolveAndLoad(e);
+  }
+}
+
+// For events without a stored TMDB id, look it up by title.
+async function resolveAndLoad(e) {
+  try {
+    const res = await fetch(`/api/resolve?title=${encodeURIComponent(e.title || "")}`);
+    const data = await res.json();
+    if (data && data.id) {
+      loadMovieDetails(data.id);
+    } else {
+      document.getElementById("detailLoading").hidden = true;
+    }
+  } catch {
     document.getElementById("detailLoading").hidden = true;
   }
 }

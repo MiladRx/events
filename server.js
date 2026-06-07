@@ -104,6 +104,37 @@ app.get("/api/search", requireDev, async (req, res) => {
   }
 });
 
+// Helper: build TMDB auth (supports v3 api key and v4 bearer token)
+function tmdbAuth() {
+  const headers = {};
+  let qs = "";
+  if (TMDB_API_KEY.startsWith("ey")) {
+    headers.Authorization = `Bearer ${TMDB_API_KEY}`;
+  } else {
+    qs = `&api_key=${encodeURIComponent(TMDB_API_KEY)}`;
+  }
+  return { headers, qs };
+}
+
+// Public: resolve a movie title to its TMDB id (for events added without one)
+app.get("/api/resolve", async (req, res) => {
+  const q = (req.query.title || "").toString().trim();
+  if (!q || !TMDB_API_KEY) return res.json({ id: null });
+  try {
+    const { headers, qs } = tmdbAuth();
+    const url =
+      `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(q)}` +
+      `&include_adult=false&language=en-US&page=1${qs}`;
+    const r = await fetch(url, { headers });
+    if (!r.ok) return res.json({ id: null });
+    const data = await r.json();
+    const first = (data.results || [])[0];
+    res.json({ id: first ? first.id : null });
+  } catch {
+    res.json({ id: null });
+  }
+});
+
 // TMDB movie details + cast (public read so everyone can view details).
 app.get("/api/movie/:id", async (req, res) => {
   if (!TMDB_API_KEY) {
