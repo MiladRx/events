@@ -7,10 +7,22 @@ First event seeded: **The Odyssey** 🎬 (16 July 2026).
 ## Features
 
 - Live countdown to the next event (days / hrs / min / sec)
-- Add events from a swipe-up glass sheet (title, emoji, category, location, date, notes)
-- Delete events
+- **Movie search** in the Add Event sheet (powered by TMDB) — pick a film and it auto-fills the title, poster, and release date
+- Add / edit / delete events (dev mode only)
 - Sorted soonest-first, past events dimmed
 - Installable as a home-screen app (PWA), full-screen on iOS with safe-area support
+
+## Setup: TMDB API key (for movie search)
+
+The movie search proxies through the server so your API key stays secret.
+
+1. Create a free TMDB account and request an API key at
+   https://www.themoviedb.org/settings/api
+2. Locally: copy `.env.example` to `.env` and set `TMDB_API_KEY=` your key
+   (a v3 API key or a v4 Read Access Token both work).
+3. On Railway: add `TMDB_API_KEY` in the service **Variables** tab.
+
+Without a key, the app still works — the search box just reports the key isn't set, and you can fill the fields in manually.
 
 ## Run locally
 

@@ -71,6 +71,11 @@
       <div class="sheet-grab"></div>
       <h2 class="sheet-title" id="sheetTitle">New event</h2>
       <form id="form" class="form">
+        <div class="field movie-search" id="movieSearchWrap">
+          <span>Search movie <span class="hint">(TMDB)</span></span>
+          <input id="movieSearch" type="text" autocomplete="off" placeholder="Type a movie name…" />
+          <div id="searchResults" class="search-results" hidden></div>
+        </div>
         <label class="field">
           <span>Title</span>
           <input name="title" required placeholder="The Odyssey" />

@@ -10,6 +10,8 @@ const devForm = document.getElementById("devForm");
 const devError = document.getElementById("devError");
 const sheetTitle = document.getElementById("sheetTitle");
 const submitBtn = document.getElementById("submitBtn");
+const movieSearch = document.getElementById("movieSearch");
+const searchResults = document.getElementById("searchResults");
 
 let events = [];
 let countdownTimer = null;
@@ -178,6 +180,7 @@ function openSheet() {
   sheetTitle.textContent = "New event";
   submitBtn.textContent = "Add event";
   form.reset();
+  resetSearch();
   sheet.hidden = false;
   document.body.style.overflow = "hidden";
 }
@@ -194,6 +197,7 @@ function openEditSheet(id) {
   form.poster.value = e.poster || "";
   form.date.value = toInputDate(e.date);
   form.notes.value = e.notes || "";
+  resetSearch();
   sheet.hidden = false;
   document.body.style.overflow = "hidden";
 }
@@ -296,6 +300,95 @@ devForm.addEventListener("submit", async (e) => {
     devError.hidden = false;
   }
 });
+
+// --- TMDB movie search ---
+let searchTimer = null;
+
+function resetSearch() {
+  if (movieSearch) movieSearch.value = "";
+  if (searchResults) {
+    searchResults.hidden = true;
+    searchResults.innerHTML = "";
+  }
+}
+
+function showResultsMessage(cls, text) {
+  searchResults.hidden = false;
+  searchResults.innerHTML = `<div class="${cls}">${escapeHtml(text)}</div>`;
+}
+
+async function doSearch(q) {
+  if (!isDev()) return;
+  showResultsMessage("search-loading", "Searching…");
+  try {
+    const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, {
+      headers: { "x-dev-key": devKey }
+    });
+    if (res.status === 401) { lockDev(); return; }
+    if (res.status === 503) {
+      showResultsMessage("search-empty", "TMDB key not set on the server.");
+      return;
+    }
+    if (!res.ok) {
+      showResultsMessage("search-empty", "Search failed. Try again.");
+      return;
+    }
+    const results = await res.json();
+    if (!results.length) {
+      showResultsMessage("search-empty", "No movies found.");
+      return;
+    }
+    renderResults(results);
+  } catch {
+    showResultsMessage("search-empty", "Search failed. Try again.");
+  }
+}
+
+function renderResults(results) {
+  searchResults.hidden = false;
+  searchResults.innerHTML = "";
+  results.forEach((m) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "search-item";
+    const img = m.poster
+      ? `<img src="${escapeHtml(m.poster)}" alt="" />`
+      : `<div class="si-noimg">🎬</div>`;
+    btn.innerHTML = `
+      ${img}
+      <div class="si-info">
+        <div class="si-title">${escapeHtml(m.title)}</div>
+        <div class="si-year">${escapeHtml(m.year || "—")}</div>
+      </div>
+    `;
+    btn.addEventListener("click", () => pickMovie(m));
+    searchResults.appendChild(btn);
+  });
+}
+
+function pickMovie(m) {
+  form.title.value = m.title || "";
+  form.emoji.value = "🎬";
+  form.category.value = "Cinema";
+  if (m.poster) form.poster.value = m.poster;
+  // TMDB gives a date only; default the showtime to 19:00
+  if (m.date) form.date.value = `${m.date}T19:00`;
+  resetSearch();
+  movieSearch.value = m.title || "";
+}
+
+if (movieSearch) {
+  movieSearch.addEventListener("input", () => {
+    const q = movieSearch.value.trim();
+    clearTimeout(searchTimer);
+    if (q.length < 2) {
+      searchResults.hidden = true;
+      searchResults.innerHTML = "";
+      return;
+    }
+    searchTimer = setTimeout(() => doSearch(q), 350);
+  });
+}
 
 applyDevState();
 load();

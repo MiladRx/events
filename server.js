@@ -6,6 +6,32 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Load environment variables from a local .env file if present (no dependency).
+// On Railway, use the Variables tab instead.
+(function loadEnv() {
+  try {
+    const envPath = path.join(__dirname, ".env");
+    if (fs.existsSync(envPath)) {
+      const lines = fs.readFileSync(envPath, "utf-8").split("\n");
+      for (const line of lines) {
+        const m = line.match(/^\s*([\w.-]+)\s*=\s*(.*)\s*$/);
+        if (m && !process.env[m[1]]) {
+          let val = m[2].trim();
+          if (
+            (val.startsWith('"') && val.endsWith('"')) ||
+            (val.startsWith("'") && val.endsWith("'"))
+          ) {
+            val = val.slice(1, -1);
+          }
+          process.env[m[1]] = val;
+        }
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+})();
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -33,6 +59,49 @@ function requireDev(req, res, next) {
 app.post("/api/auth", (req, res) => {
   const ok = (req.body && req.body.password) === DEV_PASSWORD;
   res.status(ok ? 200 : 401).json({ ok });
+});
+
+// TMDB movie search (dev only). The API key stays on the server.
+// Set TMDB_API_KEY in the environment (Railway Variables / local env).
+const TMDB_API_KEY = process.env.TMDB_API_KEY || "";
+const TMDB_IMG = "https://image.tmdb.org/t/p/w500";
+
+app.get("/api/search", requireDev, async (req, res) => {
+  const q = (req.query.q || "").toString().trim();
+  if (!q) return res.json([]);
+  if (!TMDB_API_KEY) {
+    return res.status(503).json({ error: "TMDB_API_KEY not configured on the server" });
+  }
+  try {
+    const url =
+      `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(q)}` +
+      `&include_adult=false&language=en-US&page=1`;
+    const headers = {};
+    // Support both v4 bearer tokens and v3 api keys
+    if (TMDB_API_KEY.startsWith("ey")) {
+      headers.Authorization = `Bearer ${TMDB_API_KEY}`;
+    }
+    const finalUrl = headers.Authorization
+      ? url
+      : `${url}&api_key=${encodeURIComponent(TMDB_API_KEY)}`;
+
+    const r = await fetch(finalUrl, { headers });
+    if (!r.ok) {
+      return res.status(502).json({ error: "TMDB request failed" });
+    }
+    const data = await r.json();
+    const results = (data.results || []).slice(0, 12).map((m) => ({
+      id: m.id,
+      title: m.title,
+      year: m.release_date ? m.release_date.slice(0, 4) : "",
+      date: m.release_date || "",
+      poster: m.poster_path ? `${TMDB_IMG}${m.poster_path}` : "",
+      overview: m.overview || ""
+    }));
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: "Search failed" });
+  }
 });
 
 // Ensure the data directory and seed file exist
