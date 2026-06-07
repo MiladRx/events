@@ -134,6 +134,32 @@
     </div>
   </div>
 
+  <!-- Movie detail modal -->
+  <div id="detailModal" class="detail-backdrop" hidden>
+    <div class="detail glass" role="dialog" aria-modal="true" aria-label="Event details">
+      <button id="detailClose" class="detail-close" aria-label="Close">✕</button>
+      <div id="detailBackdrop" class="detail-backdrop-img"></div>
+      <div class="detail-scroll">
+        <div class="detail-head">
+          <img id="detailPoster" class="detail-poster" alt="" hidden />
+          <div class="detail-head-info">
+            <h2 id="detailTitle" class="detail-title">—</h2>
+            <p id="detailTagline" class="detail-tagline"></p>
+            <div id="detailMeta" class="detail-meta"></div>
+          </div>
+        </div>
+        <div id="detailEventInfo" class="detail-event"></div>
+        <div id="detailGenres" class="detail-genres"></div>
+        <p id="detailOverview" class="detail-overview"></p>
+        <div id="detailCastWrap" class="detail-section" hidden>
+          <h3 class="detail-section-title">Cast</h3>
+          <div id="detailCast" class="cast-row"></div>
+        </div>
+        <div id="detailLoading" class="detail-loading" hidden>Loading movie details…</div>
+      </div>
+    </div>
+  </div>
+
   <script src="/app.js"></script>
 </body>
 </html>

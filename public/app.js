@@ -16,6 +16,7 @@ const searchResults = document.getElementById("searchResults");
 let events = [];
 let countdownTimer = null;
 let editingId = null; // null = adding, otherwise editing this event id
+let selectedTmdbId = null; // TMDB id captured when a movie is picked
 // Dev password held only for this browser session. Unlocks add/remove.
 let devKey = sessionStorage.getItem("devKey") || null;
 
@@ -65,8 +66,11 @@ function render() {
       `${fmtDate(next.date)}${next.location ? " · " + next.location : ""}`;
     setHeroPoster(next.poster);
     startCountdown(next.date);
+    hero.onclick = () => openDetail(next);
+    hero.style.cursor = "pointer";
   } else {
     hero.hidden = true;
+    hero.onclick = null;
     if (countdownTimer) clearInterval(countdownTimer);
   }
 
@@ -77,6 +81,7 @@ function render() {
     li.className = "card";
     const past = new Date(e.date) < new Date();
     li.style.opacity = past ? "0.5" : "1";
+    li.style.cursor = "pointer";
     const thumb = e.poster
       ? `<img class="card-poster" src="${escapeHtml(e.poster)}" alt="" decoding="async" onload="this.classList.add('loaded')" onerror="this.outerHTML='<div class=&quot;card-emoji&quot;>${e.emoji || "📅"}</div>'" />`
       : `<div class="card-emoji">${e.emoji || "📅"}</div>`;
@@ -95,15 +100,22 @@ function render() {
         <button class="act-btn del-btn" aria-label="Delete" data-id="${e.id}">✕</button>
       </div>` : ""}
     `;
+    li.addEventListener("click", () => openDetail(e));
     list.appendChild(li);
   });
 
   if (isDev()) {
     document.querySelectorAll(".del-btn").forEach((btn) => {
-      btn.addEventListener("click", () => removeEvent(btn.dataset.id));
+      btn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        removeEvent(btn.dataset.id);
+      });
     });
     document.querySelectorAll(".edit-btn").forEach((btn) => {
-      btn.addEventListener("click", () => openEditSheet(btn.dataset.id));
+      btn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        openEditSheet(btn.dataset.id);
+      });
     });
   }
 }
@@ -228,6 +240,7 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!isDev()) return;
   const data = Object.fromEntries(new FormData(form).entries());
+  if (selectedTmdbId) data.tmdbId = selectedTmdbId;
   const editing = editingId !== null;
   const res = await fetch(
     editing ? `/api/events/${editingId}` : "/api/events",
@@ -306,6 +319,7 @@ let searchTimer = null;
 
 function resetSearch() {
   if (movieSearch) movieSearch.value = "";
+  selectedTmdbId = null;
   if (searchResults) {
     searchResults.hidden = true;
     searchResults.innerHTML = "";
@@ -373,6 +387,7 @@ function pickMovie(m) {
   if (m.poster) form.poster.value = m.poster;
   // TMDB gives a date only; default the showtime to 19:00
   if (m.date) form.date.value = `${m.date}T19:00`;
+  selectedTmdbId = m.id || null;
   resetSearch();
   movieSearch.value = m.title || "";
 }
@@ -389,6 +404,107 @@ if (movieSearch) {
     searchTimer = setTimeout(() => doSearch(q), 350);
   });
 }
+
+// --- Movie / event detail modal ---
+const detailModal = document.getElementById("detailModal");
+
+function openDetail(e) {
+  // Reset
+  document.getElementById("detailTitle").textContent = e.title || "";
+  document.getElementById("detailTagline").textContent = "";
+  document.getElementById("detailMeta").innerHTML = "";
+  document.getElementById("detailGenres").innerHTML = "";
+  document.getElementById("detailOverview").textContent = e.notes || "";
+  document.getElementById("detailCastWrap").hidden = true;
+  document.getElementById("detailCast").innerHTML = "";
+
+  const posterEl = document.getElementById("detailPoster");
+  if (e.poster) {
+    posterEl.src = e.poster;
+    posterEl.hidden = false;
+  } else {
+    posterEl.hidden = true;
+  }
+  const bd = document.getElementById("detailBackdrop");
+  bd.style.backgroundImage = e.poster ? `url("${e.poster}")` : "";
+
+  // Event-specific info (date, location)
+  const past = new Date(e.date) < new Date();
+  document.getElementById("detailEventInfo").innerHTML = `
+    <div class="detail-when">📅 ${escapeHtml(fmtDate(e.date))} · ${past ? "Past" : relative(e.date)}</div>
+    ${e.location ? `<div class="detail-loc">📍 ${escapeHtml(e.location)}</div>` : ""}
+  `;
+
+  detailModal.hidden = false;
+  document.body.style.overflow = "hidden";
+
+  // If it has a TMDB id, fetch rich details
+  if (e.tmdbId) {
+    document.getElementById("detailLoading").hidden = false;
+    loadMovieDetails(e.tmdbId);
+  } else {
+    document.getElementById("detailLoading").hidden = true;
+  }
+}
+
+async function loadMovieDetails(tmdbId) {
+  try {
+    const res = await fetch(`/api/movie/${tmdbId}`);
+    document.getElementById("detailLoading").hidden = true;
+    if (!res.ok) return;
+    const m = await res.json();
+
+    if (m.backdrop) {
+      document.getElementById("detailBackdrop").style.backgroundImage = `url("${m.backdrop}")`;
+    }
+    if (m.tagline) {
+      document.getElementById("detailTagline").textContent = m.tagline;
+    }
+    if (m.overview) {
+      document.getElementById("detailOverview").textContent = m.overview;
+    }
+
+    const meta = [];
+    if (m.releaseDate) meta.push(new Date(m.releaseDate).getFullYear());
+    if (m.runtime) meta.push(`${Math.floor(m.runtime / 60)}h ${m.runtime % 60}m`);
+    if (m.rating) meta.push(`★ ${m.rating}`);
+    if (m.director) meta.push(`Dir. ${m.director}`);
+    document.getElementById("detailMeta").innerHTML = meta
+      .map((x) => `<span class="meta-chip">${escapeHtml(String(x))}</span>`)
+      .join("");
+
+    document.getElementById("detailGenres").innerHTML = (m.genres || [])
+      .map((g) => `<span class="genre-tag">${escapeHtml(g)}</span>`)
+      .join("");
+
+    if (m.cast && m.cast.length) {
+      document.getElementById("detailCastWrap").hidden = false;
+      document.getElementById("detailCast").innerHTML = m.cast
+        .map((c) => `
+          <div class="cast-card">
+            ${c.photo
+              ? `<img src="${escapeHtml(c.photo)}" alt="" loading="lazy" />`
+              : `<div class="cast-noimg">🎭</div>`}
+            <div class="cast-name">${escapeHtml(c.name)}</div>
+            <div class="cast-char">${escapeHtml(c.character)}</div>
+          </div>
+        `)
+        .join("");
+    }
+  } catch {
+    document.getElementById("detailLoading").hidden = true;
+  }
+}
+
+function closeDetail() {
+  detailModal.hidden = true;
+  document.body.style.overflow = "";
+}
+
+document.getElementById("detailClose").addEventListener("click", closeDetail);
+detailModal.addEventListener("click", (e) => {
+  if (e.target === detailModal) closeDetail();
+});
 
 applyDevState();
 load();

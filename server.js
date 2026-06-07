@@ -104,6 +104,51 @@ app.get("/api/search", requireDev, async (req, res) => {
   }
 });
 
+// TMDB movie details + cast (public read so everyone can view details).
+app.get("/api/movie/:id", async (req, res) => {
+  if (!TMDB_API_KEY) {
+    return res.status(503).json({ error: "TMDB_API_KEY not configured" });
+  }
+  const id = encodeURIComponent(req.params.id);
+  try {
+    const headers = {};
+    let auth = "";
+    if (TMDB_API_KEY.startsWith("ey")) {
+      headers.Authorization = `Bearer ${TMDB_API_KEY}`;
+    } else {
+      auth = `&api_key=${encodeURIComponent(TMDB_API_KEY)}`;
+    }
+    const url =
+      `https://api.themoviedb.org/3/movie/${id}` +
+      `?language=en-US&append_to_response=credits${auth}`;
+    const r = await fetch(url, { headers });
+    if (!r.ok) return res.status(502).json({ error: "TMDB request failed" });
+    const m = await r.json();
+    const cast = (m.credits?.cast || []).slice(0, 12).map((c) => ({
+      name: c.name,
+      character: c.character || "",
+      photo: c.profile_path ? `${TMDB_IMG}${c.profile_path}` : ""
+    }));
+    const director = (m.credits?.crew || []).find((c) => c.job === "Director");
+    res.json({
+      id: m.id,
+      title: m.title,
+      tagline: m.tagline || "",
+      overview: m.overview || "",
+      poster: m.poster_path ? `${TMDB_IMG}${m.poster_path}` : "",
+      backdrop: m.backdrop_path ? `https://image.tmdb.org/t/p/w780${m.backdrop_path}` : "",
+      releaseDate: m.release_date || "",
+      runtime: m.runtime || 0,
+      rating: m.vote_average ? Math.round(m.vote_average * 10) / 10 : 0,
+      genres: (m.genres || []).map((g) => g.name),
+      director: director ? director.name : "",
+      cast
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Details failed" });
+  }
+});
+
 // Ensure the data directory and seed file exist
 function ensureData() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -114,6 +159,7 @@ function ensureData() {
         title: "The Odyssey",
         category: "Cinema",
         emoji: "🎬",
+        tmdbId: 1368337,
         poster: "https://image.tmdb.org/t/p/w500/9C9PAnrZcB8x7YHNlBs4PUv0Z7K.jpg",
         location: "",
         date: "2026-07-16T19:00:00",
@@ -124,6 +170,7 @@ function ensureData() {
         title: "Spider-Man: Brand New Day",
         category: "Cinema",
         emoji: "🕷️",
+        tmdbId: 969681,
         poster: "https://image.tmdb.org/t/p/w500/yyB2VJEW3an2xCdcYCPQhn9QERR.jpg",
         location: "",
         date: "2026-07-29T19:00:00",
@@ -157,7 +204,7 @@ app.get("/api/events", (req, res) => {
 
 // API: create event (dev only)
 app.post("/api/events", requireDev, (req, res) => {
-  const { title, category, emoji, location, date, notes, poster } = req.body || {};
+  const { title, category, emoji, location, date, notes, poster, tmdbId } = req.body || {};
   if (!title || !date) {
     return res.status(400).json({ error: "title and date are required" });
   }
@@ -168,6 +215,7 @@ app.post("/api/events", requireDev, (req, res) => {
     category: category || "Hangout",
     emoji: emoji || "📅",
     poster: poster || "",
+    tmdbId: tmdbId || null,
     location: location || "",
     date,
     notes: notes || ""
@@ -183,7 +231,7 @@ app.put("/api/events/:id", requireDev, (req, res) => {
   const idx = events.findIndex((e) => e.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: "not found" });
 
-  const { title, category, emoji, location, date, notes, poster } = req.body || {};
+  const { title, category, emoji, location, date, notes, poster, tmdbId } = req.body || {};
   if (!title || !date) {
     return res.status(400).json({ error: "title and date are required" });
   }
@@ -193,6 +241,7 @@ app.put("/api/events/:id", requireDev, (req, res) => {
     category: category || "Hangout",
     emoji: emoji || "📅",
     poster: poster || "",
+    tmdbId: tmdbId !== undefined ? tmdbId : events[idx].tmdbId || null,
     location: location || "",
     date,
     notes: notes || ""
