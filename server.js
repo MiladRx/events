@@ -338,6 +338,32 @@ app.delete("/api/events/:id", requireDev, (req, res) => {
 
 app.get("/healthz", (_req, res) => res.json({ ok: true }));
 
+// Diagnostic endpoint: shows where data is stored and whether it's writable.
+app.get("/api/debug/storage", (_req, res) => {
+  let writable = false;
+  let fileExists = false;
+  let eventCount = -1;
+  try {
+    fileExists = fs.existsSync(DATA_FILE);
+    if (fileExists) eventCount = readEvents().length;
+    const testPath = path.join(DATA_DIR, ".writetest");
+    fs.writeFileSync(testPath, "ok");
+    fs.unlinkSync(testPath);
+    writable = true;
+  } catch {
+    writable = false;
+  }
+  res.json({
+    DATA_DIR,
+    DATA_FILE,
+    dataDirEnvSet: !!process.env.DATA_DIR,
+    fileExists,
+    eventCount,
+    writable
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Upcoming Events running on port ${PORT}`);
+  console.log(`DATA_DIR = ${DATA_DIR} (env set: ${!!process.env.DATA_DIR})`);
 });
