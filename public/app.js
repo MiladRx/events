@@ -416,6 +416,7 @@ function openDetail(e) {
   document.getElementById("detailMeta").innerHTML = "";
   document.getElementById("detailGenres").innerHTML = "";
   document.getElementById("detailOverview").textContent = e.notes || "";
+  document.getElementById("detailOverview").classList.remove("expanded");
   document.getElementById("detailCastWrap").hidden = true;
   document.getElementById("detailCast").innerHTML = "";
 
@@ -566,6 +567,9 @@ function closeDetail() {
 }
 
 document.getElementById("detailClose").addEventListener("click", closeDetail);
+document.getElementById("detailOverview").addEventListener("click", function () {
+  this.classList.toggle("expanded");
+});
 detailModal.addEventListener("click", (e) => {
   if (e.target === detailModal) closeDetail();
 });

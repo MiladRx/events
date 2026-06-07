@@ -623,6 +623,16 @@ body.splash-active { overflow: hidden; }
   line-height: 1.55;
   color: rgba(235,238,248,0.85);
   flex-shrink: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  cursor: pointer;
+}
+.detail-overview.expanded {
+  -webkit-line-clamp: unset;
+  max-height: 30dvh;
+  overflow-y: auto;
 }
 .detail-section {
   margin-top: 20px;
