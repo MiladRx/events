@@ -146,7 +146,7 @@ body {
   position: relative;
   border-radius: var(--radius);
   padding: 22px;
-  margin-bottom: 30px;
+  margin-bottom: 18px;
   overflow: hidden;
   isolation: isolate;
 }
@@ -180,11 +180,13 @@ body {
 .hero.has-poster .hero-glow { display: none; }
 .hero.has-poster .hero-emoji { display: none; }
 .hero.has-poster {
-  min-height: 440px;
+  height: 38dvh;
+  max-height: 360px;
+  min-height: 260px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding-top: 120px;
+  padding-top: 80px;
 }
 .hero-label {
   font-size: 13px;
