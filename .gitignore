@@ -1,5 +1,6 @@
 node_modules/
 data/events.json
+data/tmdb-cache.json
 .env
 *.log
 .DS_Store

@@ -39,6 +39,34 @@ const PORT = process.env.PORT || 3000;
 // (e.g. /data) so events survive redeploys. Falls back to a local ./data folder.
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "data");
 const DATA_FILE = path.join(DATA_DIR, "events.json");
+const CACHE_FILE = path.join(DATA_DIR, "tmdb-cache.json");
+
+// System-wide TMDB cache, persisted to disk so a movie is fetched only once.
+// Structure: { movies: { [id]: {...} }, resolves: { [title]: id } }
+let tmdbCache = { movies: {}, resolves: {} };
+function loadCache() {
+  try {
+    if (fs.existsSync(CACHE_FILE)) {
+      tmdbCache = JSON.parse(fs.readFileSync(CACHE_FILE, "utf-8"));
+      if (!tmdbCache.movies) tmdbCache.movies = {};
+      if (!tmdbCache.resolves) tmdbCache.resolves = {};
+    }
+  } catch {
+    tmdbCache = { movies: {}, resolves: {} };
+  }
+}
+let cacheSaveTimer = null;
+function saveCache() {
+  clearTimeout(cacheSaveTimer);
+  cacheSaveTimer = setTimeout(() => {
+    try {
+      if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+      fs.writeFileSync(CACHE_FILE, JSON.stringify(tmdbCache));
+    } catch {
+      /* ignore */
+    }
+  }, 300);
+}
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
@@ -120,6 +148,10 @@ function tmdbAuth() {
 app.get("/api/resolve", async (req, res) => {
   const q = (req.query.title || "").toString().trim();
   if (!q || !TMDB_API_KEY) return res.json({ id: null });
+  // Serve from system cache if we've resolved this title before
+  if (Object.prototype.hasOwnProperty.call(tmdbCache.resolves, q)) {
+    return res.json({ id: tmdbCache.resolves[q] });
+  }
   try {
     const { headers, qs } = tmdbAuth();
     const url =
@@ -129,7 +161,10 @@ app.get("/api/resolve", async (req, res) => {
     if (!r.ok) return res.json({ id: null });
     const data = await r.json();
     const first = (data.results || [])[0];
-    res.json({ id: first ? first.id : null });
+    const id = first ? first.id : null;
+    tmdbCache.resolves[q] = id;
+    saveCache();
+    res.json({ id });
   } catch {
     res.json({ id: null });
   }
@@ -137,10 +172,15 @@ app.get("/api/resolve", async (req, res) => {
 
 // TMDB movie details + cast (public read so everyone can view details).
 app.get("/api/movie/:id", async (req, res) => {
+  const rawId = req.params.id;
+  // Serve from system cache if available (fetched only once, ever)
+  if (tmdbCache.movies[rawId]) {
+    return res.json(tmdbCache.movies[rawId]);
+  }
   if (!TMDB_API_KEY) {
     return res.status(503).json({ error: "TMDB_API_KEY not configured" });
   }
-  const id = encodeURIComponent(req.params.id);
+  const id = encodeURIComponent(rawId);
   try {
     const headers = {};
     let auth = "";
@@ -161,7 +201,7 @@ app.get("/api/movie/:id", async (req, res) => {
       photo: c.profile_path ? `${TMDB_IMG}${c.profile_path}` : ""
     }));
     const director = (m.credits?.crew || []).find((c) => c.job === "Director");
-    res.json({
+    const payload = {
       id: m.id,
       title: m.title,
       tagline: m.tagline || "",
@@ -174,7 +214,10 @@ app.get("/api/movie/:id", async (req, res) => {
       genres: (m.genres || []).map((g) => g.name),
       director: director ? director.name : "",
       cast
-    });
+    };
+    tmdbCache.movies[rawId] = payload;
+    saveCache();
+    res.json(payload);
   } catch (err) {
     res.status(500).json({ error: "Details failed" });
   }
@@ -212,6 +255,7 @@ function ensureData() {
   }
 }
 ensureData();
+loadCache();
 
 function readEvents() {
   try {

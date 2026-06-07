@@ -50,6 +50,7 @@ async function load() {
     events = [];
   }
   render();
+  prefetchDetails();
 }
 
 function render() {
@@ -440,36 +441,84 @@ function openDetail(e) {
 
   // If it has a TMDB id, fetch rich details. Otherwise try resolving by title.
   if (e.tmdbId) {
-    document.getElementById("detailLoading").hidden = false;
-    loadMovieDetails(e.tmdbId);
+    if (movieCache.has(e.tmdbId)) {
+      document.getElementById("detailLoading").hidden = true;
+      renderMovieDetails(movieCache.get(e.tmdbId));
+    } else {
+      document.getElementById("detailLoading").hidden = false;
+      loadMovieDetails(e.tmdbId);
+    }
   } else {
-    document.getElementById("detailLoading").hidden = false;
-    resolveAndLoad(e);
+    const cachedId = resolveCache.get((e.title || "").trim());
+    if (cachedId && movieCache.has(cachedId)) {
+      document.getElementById("detailLoading").hidden = true;
+      renderMovieDetails(movieCache.get(cachedId));
+    } else {
+      document.getElementById("detailLoading").hidden = false;
+      resolveAndLoad(e);
+    }
   }
 }
 
 // For events without a stored TMDB id, look it up by title.
 async function resolveAndLoad(e) {
-  try {
-    const res = await fetch(`/api/resolve?title=${encodeURIComponent(e.title || "")}`);
-    const data = await res.json();
-    if (data && data.id) {
-      loadMovieDetails(data.id);
-    } else {
-      document.getElementById("detailLoading").hidden = true;
-    }
-  } catch {
+  const id = await resolveTitle(e.title);
+  if (id) {
+    loadMovieDetails(id);
+  } else {
     document.getElementById("detailLoading").hidden = true;
   }
 }
 
 async function loadMovieDetails(tmdbId) {
+  const m = await fetchMovie(tmdbId);
+  document.getElementById("detailLoading").hidden = true;
+  if (m) renderMovieDetails(m);
+}
+
+// In-memory cache for this session (server already caches across the system)
+const movieCache = new Map();
+const resolveCache = new Map();
+
+async function fetchMovie(tmdbId) {
+  if (movieCache.has(tmdbId)) return movieCache.get(tmdbId);
   try {
     const res = await fetch(`/api/movie/${tmdbId}`);
-    document.getElementById("detailLoading").hidden = true;
-    if (!res.ok) return;
+    if (!res.ok) return null;
     const m = await res.json();
+    movieCache.set(tmdbId, m);
+    if (m.backdrop) new Image().src = m.backdrop;
+    return m;
+  } catch {
+    return null;
+  }
+}
 
+async function resolveTitle(title) {
+  const key = (title || "").trim();
+  if (!key) return null;
+  if (resolveCache.has(key)) return resolveCache.get(key);
+  try {
+    const res = await fetch(`/api/resolve?title=${encodeURIComponent(key)}`);
+    const data = await res.json();
+    const id = data && data.id ? data.id : null;
+    resolveCache.set(key, id);
+    return id;
+  } catch {
+    return null;
+  }
+}
+
+// Warm the cache so detail views open instantly
+async function prefetchDetails() {
+  for (const e of events) {
+    let id = e.tmdbId;
+    if (!id) id = await resolveTitle(e.title);
+    if (id) fetchMovie(id);
+  }
+}
+
+function renderMovieDetails(m) {
     if (m.backdrop) {
       document.getElementById("detailBackdrop").style.backgroundImage = `url("${m.backdrop}")`;
     }
@@ -509,9 +558,6 @@ async function loadMovieDetails(tmdbId) {
         `)
         .join("");
     }
-  } catch {
-    document.getElementById("detailLoading").hidden = true;
-  }
 }
 
 function closeDetail() {
