@@ -468,7 +468,7 @@ async function loadMovieDetails(tmdbId) {
     if (m.releaseDate) meta.push(new Date(m.releaseDate).getFullYear());
     if (m.runtime) meta.push(`${Math.floor(m.runtime / 60)}h ${m.runtime % 60}m`);
     if (m.rating) meta.push(`★ ${m.rating}`);
-    if (m.director) meta.push(`Dir. ${m.director}`);
+    if (m.director) meta.push(` ${m.director}`);
     document.getElementById("detailMeta").innerHTML = meta
       .map((x) => `<span class="meta-chip">${escapeHtml(String(x))}</span>`)
       .join("");
@@ -481,12 +481,14 @@ async function loadMovieDetails(tmdbId) {
       document.getElementById("detailCastWrap").hidden = false;
       document.getElementById("detailCast").innerHTML = m.cast
         .map((c) => `
-          <div class="cast-card">
+          <div class="cast-row-item">
             ${c.photo
-              ? `<img src="${escapeHtml(c.photo)}" alt="" loading="lazy" />`
-              : `<div class="cast-noimg">🎭</div>`}
-            <div class="cast-name">${escapeHtml(c.name)}</div>
-            <div class="cast-char">${escapeHtml(c.character)}</div>
+              ? `<img class="cast-avatar" src="${escapeHtml(c.photo)}" alt="" loading="lazy" />`
+              : `<div class="cast-avatar cast-avatar-empty">🎭</div>`}
+            <div class="cast-text">
+              <div class="cast-name">${escapeHtml(c.name)}</div>
+              ${c.character ? `<div class="cast-char">${escapeHtml(c.character)}</div>` : ""}
+            </div>
           </div>
         `)
         .join("");
