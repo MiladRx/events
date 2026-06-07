@@ -483,7 +483,7 @@ body.splash-active { overflow: hidden; height: 100dvh; }
   position: relative;
   width: 100%;
   max-width: 520px;
-  max-height: 92dvh;
+  height: 92dvh;
   border-radius: 30px 30px 0 0;
   overflow: hidden;
   animation: slideUp 0.36s cubic-bezier(0.22, 1, 0.36, 1);
@@ -525,6 +525,7 @@ body.splash-active { overflow: hidden; height: 100dvh; }
 .detail-scroll {
   position: relative;
   z-index: 1;
+  flex: 1;
   overflow-y: auto;
   padding: 20px;
   padding-top: 130px;
