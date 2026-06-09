@@ -43,17 +43,24 @@ const DATA_FILE = path.join(DATA_DIR, "events.json");
 const CACHE_FILE = path.join(DATA_DIR, "tmdb-cache.json");
 
 // System-wide TMDB cache, persisted to disk so a movie is fetched only once.
-// Structure: { movies: { [id]: {...} }, resolves: { [title]: id } }
-let tmdbCache = { movies: {}, resolves: {} };
+// Structure: { version, movies: { [id]: {...} }, resolves: { [title]: id } }
+const CACHE_SCHEMA = 2; // bump to invalidate cached payloads when shape changes
+let tmdbCache = { version: CACHE_SCHEMA, movies: {}, resolves: {} };
 function loadCache() {
   try {
     if (fs.existsSync(CACHE_FILE)) {
-      tmdbCache = JSON.parse(fs.readFileSync(CACHE_FILE, "utf-8"));
-      if (!tmdbCache.movies) tmdbCache.movies = {};
-      if (!tmdbCache.resolves) tmdbCache.resolves = {};
+      const parsed = JSON.parse(fs.readFileSync(CACHE_FILE, "utf-8"));
+      if (parsed.version === CACHE_SCHEMA) {
+        tmdbCache = parsed;
+        if (!tmdbCache.movies) tmdbCache.movies = {};
+        if (!tmdbCache.resolves) tmdbCache.resolves = {};
+      } else {
+        // Schema changed — keep resolves, drop stale movie payloads
+        tmdbCache = { version: CACHE_SCHEMA, movies: {}, resolves: parsed.resolves || {} };
+      }
     }
   } catch {
-    tmdbCache = { movies: {}, resolves: {} };
+    tmdbCache = { version: CACHE_SCHEMA, movies: {}, resolves: {} };
   }
 }
 let cacheSaveTimer = null;
@@ -192,7 +199,7 @@ app.get("/api/movie/:id", async (req, res) => {
     }
     const url =
       `https://api.themoviedb.org/3/movie/${id}` +
-      `?language=en-US&append_to_response=credits${auth}`;
+      `?language=en-US&append_to_response=credits,videos${auth}`;
     const r = await fetch(url, { headers });
     if (!r.ok) return res.status(502).json({ error: "TMDB request failed" });
     const m = await r.json();
@@ -202,6 +209,13 @@ app.get("/api/movie/:id", async (req, res) => {
       photo: c.profile_path ? `${TMDB_IMG}${c.profile_path}` : ""
     }));
     const director = (m.credits?.crew || []).find((c) => c.job === "Director");
+    // Pick the best YouTube trailer
+    const vids = (m.videos?.results || []).filter((v) => v.site === "YouTube");
+    const trailerVid =
+      vids.find((v) => v.type === "Trailer" && v.official) ||
+      vids.find((v) => v.type === "Trailer") ||
+      vids.find((v) => v.type === "Teaser") ||
+      vids[0];
     const payload = {
       id: m.id,
       title: m.title,
@@ -214,6 +228,7 @@ app.get("/api/movie/:id", async (req, res) => {
       rating: m.vote_average ? Math.round(m.vote_average * 10) / 10 : 0,
       genres: (m.genres || []).map((g) => g.name),
       director: director ? director.name : "",
+      trailer: trailerVid ? `https://www.youtube.com/watch?v=${trailerVid.key}` : "",
       cast
     };
     tmdbCache.movies[rawId] = payload;
