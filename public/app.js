@@ -567,6 +567,8 @@ function renderMovieDetails(m) {
           </div>
         `)
         .join("");
+      // Reset scroll AFTER the new cast is in place
+      document.getElementById("detailCast").scrollTop = 0;
     }
 }
 
