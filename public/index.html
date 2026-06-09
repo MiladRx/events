@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#05060a" />
+  <meta name="theme-color" content="#0c0c0f" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Upcoming" />
@@ -19,69 +19,68 @@
   </div>
 
   <main class="app">
-    <header class="top">
-      <div class="top-row">
-        <div>
-          <p class="eyebrow"></p>
-          <h1 class="title">Upcoming</h1>
-        </div>
-        <div class="top-actions">
-          <button id="addBtn" class="icon-btn" aria-label="Add event" hidden>
-            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-          </button>
-          <button id="devBtn" class="dev-btn" aria-label="Developer access">Dev</button>
-        </div>
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">▶</span>
+        <h1 class="brand-title">Upcoming</h1>
       </div>
-
-      <section id="hero" class="hero glass" hidden>
-        <div id="heroPoster" class="hero-poster"></div>
-        <div class="hero-glow"></div>
-        <div class="hero-content">
-          <p class="hero-label">Next up</p>
-          <div class="hero-main">
-            <span id="heroEmoji" class="hero-emoji">🎬</span>
-            <div>
-              <h2 id="heroTitle" class="hero-title">—</h2>
-              <p id="heroMeta" class="hero-meta">—</p>
-            </div>
-          </div>
-          <div id="countdown" class="countdown">
-            <div class="unit"><span id="cdDays">0</span><label>days</label></div>
-            <div class="unit"><span id="cdHours">0</span><label>hrs</label></div>
-            <div class="unit"><span id="cdMins">0</span><label>min</label></div>
-            <div class="unit"><span id="cdSecs">0</span><label>sec</label></div>
-          </div>
-        </div>
-      </section>
+      <div class="topbar-actions">
+        <button id="addBtn" class="btn-add" aria-label="Add event" hidden>
+          <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        </button>
+        <button id="devBtn" class="btn-dev" aria-label="Developer access">Dev</button>
+      </div>
     </header>
 
-    <section class="list-wrap">
-      <h3 class="section-head">All events</h3>
+    <!-- Hero: next up -->
+    <section id="hero" class="hero" hidden>
+      <div id="heroPoster" class="hero-poster"></div>
+      <div class="hero-shade"></div>
+      <div class="hero-content">
+        <span class="hero-kicker"><span id="heroEmoji" class="hero-emoji">🎬</span> Next up</span>
+        <h2 id="heroTitle" class="hero-title">—</h2>
+        <p id="heroMeta" class="hero-meta">—</p>
+        <div id="countdown" class="countdown">
+          <div class="cd"><b id="cdDays">0</b><i>days</i></div>
+          <div class="cd"><b id="cdHours">0</b><i>hrs</i></div>
+          <div class="cd"><b id="cdMins">0</b><i>min</i></div>
+          <div class="cd"><b id="cdSecs">0</b><i>sec</i></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Events list -->
+    <section class="listing">
+      <div class="listing-head">
+        <h3>All events</h3>
+        <span id="countBadge" class="count-badge"></span>
+      </div>
       <ul id="list" class="list"></ul>
-      <div id="empty" class="empty glass" hidden>
-        <span>📭</span>
-        <p>No upcoming events right now. Check back soon.</p>
+      <div id="empty" class="empty" hidden>
+        <span>🎬</span>
+        <p>No upcoming events right now.</p>
       </div>
     </section>
   </main>
 
-  <!-- Add event sheet (dev only) -->
+  <!-- Add / edit event sheet -->
   <div id="sheet" class="sheet-backdrop" hidden>
-    <div class="sheet glass" role="dialog" aria-modal="true" aria-label="Add event">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Add event">
       <div class="sheet-grab"></div>
       <h2 class="sheet-title" id="sheetTitle">New event</h2>
       <form id="form" class="form">
-        <div class="field movie-search" id="movieSearchWrap">
+        <label class="field movie-search" id="movieSearchWrap">
           <span>Search movie <span class="hint">(TMDB)</span></span>
           <input id="movieSearch" type="text" autocomplete="off" placeholder="Type a movie name…" />
           <div id="searchResults" class="search-results" hidden></div>
-        </div>
+        </label>
         <label class="field">
           <span>Title</span>
           <input name="title" required placeholder="The Odyssey" />
         </label>
         <div class="field-row">
-          <label class="field">
+          <label class="field" style="width:84px">
             <span>Emoji</span>
             <input name="emoji" placeholder="🎬" maxlength="2" />
           </label>
@@ -92,14 +91,14 @@
         </div>
         <label class="field">
           <span>Location</span>
-          <input name="location" placeholder="Local Cinema" />
+          <input name="location" placeholder="Optional" />
         </label>
         <label class="field">
           <span>Poster image URL <span class="hint">(optional)</span></span>
           <input name="poster" type="url" placeholder="https://image.tmdb.org/.../poster.jpg" />
         </label>
         <label class="field">
-          <span>Date & time</span>
+          <span>Date &amp; time</span>
           <input name="date" type="datetime-local" required />
         </label>
         <label class="field">
@@ -116,10 +115,10 @@
 
   <!-- Dev login sheet -->
   <div id="devSheet" class="sheet-backdrop" hidden>
-    <div class="sheet glass" role="dialog" aria-modal="true" aria-label="Developer access">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Developer access">
       <div class="sheet-grab"></div>
       <h2 class="sheet-title">Developer access</h2>
-      <p class="sheet-sub">Enter the password to add or remove events.</p>
+      <p class="sheet-sub">Enter the password to add, edit, or remove events.</p>
       <form id="devForm" class="form">
         <label class="field">
           <span>Password</span>
@@ -134,7 +133,7 @@
     </div>
   </div>
 
-  <!-- Movie detail modal -->
+  <!-- Movie detail (full screen) -->
   <div id="detailModal" class="detail-backdrop" hidden>
     <div class="detail" role="dialog" aria-modal="true" aria-label="Event details">
       <button id="detailClose" class="detail-close" aria-label="Close">✕</button>

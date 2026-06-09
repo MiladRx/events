@@ -77,6 +77,11 @@ function render() {
 
   empty.hidden = events.length > 0;
 
+  const countBadge = document.getElementById("countBadge");
+  if (countBadge) {
+    countBadge.textContent = events.length ? `${events.length}` : "";
+  }
+
   events.forEach((e) => {
     const li = document.createElement("li");
     li.className = "card";
