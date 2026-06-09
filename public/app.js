@@ -575,6 +575,11 @@ function renderMovieDetails(m) {
 function closeDetail() {
   detailModal.hidden = true;
   document.body.style.overflow = "";
+  // Reset scroll so it's fresh next time it opens
+  const cast = document.getElementById("detailCast");
+  if (cast) cast.scrollTop = 0;
+  const body = document.querySelector(".detail-body");
+  if (body) body.scrollTop = 0;
 }
 
 document.getElementById("detailClose").addEventListener("click", closeDetail);
