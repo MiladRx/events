@@ -424,6 +424,10 @@ function openDetail(e) {
   document.getElementById("detailOverview").classList.remove("expanded");
   document.getElementById("detailCastWrap").hidden = true;
   document.getElementById("detailCast").innerHTML = "";
+  // Reset scroll positions so a new movie always starts at the top
+  document.getElementById("detailCast").scrollTop = 0;
+  const detailBody = document.querySelector(".detail-body");
+  if (detailBody) detailBody.scrollTop = 0;
 
   const posterEl = document.getElementById("detailPoster");
   if (e.poster) {
