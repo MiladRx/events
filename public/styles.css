@@ -23,7 +23,7 @@ body { -webkit-font-smoothing: antialiased; }
   max-width: 600px;
   margin: 0 auto;
   min-height: 100dvh;
-  padding: calc(var(--safe-top) + 18px) 16px calc(var(--safe-bottom) + 90px);
+  padding: calc(var(--safe-top) + 24px) 16px calc(var(--safe-bottom) + 110px);
 }
 
 /* Header */
@@ -119,7 +119,7 @@ body { -webkit-font-smoothing: antialiased; }
 .fab {
   position: fixed;
   right: max(18px, calc(50% - 300px + 18px));
-  bottom: calc(var(--safe-bottom) + 22px);
+  bottom: calc(var(--safe-bottom) + 80px);
   width: 58px; height: 58px; border-radius: 50%; border: none; cursor: pointer;
   display: grid; place-items: center; color: #fff;
   background: linear-gradient(135deg, var(--accent), var(--accent2));
@@ -186,7 +186,7 @@ textarea { resize: none; }
   font-size: 16px; cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
 }
 .detail-scroll { height: 100dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.detail-hero { position: relative; height: 56dvh; min-height: 340px; }
+.detail-hero { position: relative; height: 48dvh; min-height: 300px; }
 .detail-backdrop-img { position: absolute; inset: 0; background-size: cover; background-position: center; }
 .detail-hero-grad { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,9,13,0.15) 0%, rgba(8,9,13,0.5) 50%, var(--bg) 100%); }
 .detail-hero-bottom { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 16px; align-items: flex-end; padding: 20px; }
@@ -196,7 +196,7 @@ textarea { resize: none; }
 .detail-tagline { font-size: 13px; color: var(--muted); font-style: italic; margin-top: 5px; }
 .detail-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .meta-chip { font-size: 12px; font-weight: 600; padding: 4px 9px; border-radius: 999px; background: rgba(255,255,255,0.1); border: 1px solid var(--line); }
-.detail-body { padding: 4px 20px calc(var(--safe-bottom) + 40px); }
+.detail-body { padding: 4px 20px calc(var(--safe-bottom) + 120px); }
 .detail-event { display: flex; flex-direction: column; gap: 6px; font-size: 14px; margin-top: 16px; }
 .detail-when { color: var(--accent2); font-weight: 600; }
 .detail-loc { color: var(--muted); }
