@@ -45,17 +45,6 @@ body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; 
   margin-bottom: 18px;
 }
 .brand { display: flex; align-items: center; gap: 10px; }
-.brand-mark {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  display: grid;
-  place-items: center;
-  font-size: 14px;
-  color: #1a1407;
-  background: linear-gradient(145deg, var(--gold-soft), var(--gold));
-  box-shadow: 0 4px 14px rgba(231, 177, 91, 0.35);
-}
 .brand-title { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
 .topbar-actions { display: flex; align-items: center; gap: 10px; }
 
