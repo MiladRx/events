@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0c0c0f" />
+  <meta name="theme-color" content="#08090d" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Upcoming" />
@@ -13,57 +13,46 @@
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body class="splash-active">
-  <!-- Splash / loading screen -->
-  <div id="splash" class="splash">
-    <div class="spinner"></div>
-  </div>
+  <div id="splash" class="splash"><div class="spinner"></div></div>
 
   <main class="app">
-    <!-- Top bar -->
-    <header class="topbar">
-      <div class="brand">
-        <h1 class="brand-title">Upcoming</h1>
+    <!-- Header -->
+    <header class="hdr">
+      <div>
+        <p class="hdr-eyebrow">What we're watching</p>
+        <h1 class="hdr-title">Upcoming</h1>
       </div>
-      <div class="topbar-actions">
-        <button id="addBtn" class="btn-add" aria-label="Add event" hidden>
-          <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
-        </button>
-        <button id="devBtn" class="btn-dev" aria-label="Developer access">Dev</button>
-      </div>
+      <button id="devBtn" class="dev-chip" aria-label="Developer access">Dev</button>
     </header>
 
-    <!-- Hero: next up -->
-    <section id="hero" class="hero" hidden>
-      <div id="heroPoster" class="hero-poster"></div>
-      <div class="hero-shade"></div>
-      <div class="hero-content">
-        <span class="hero-kicker"><span id="heroEmoji" class="hero-emoji">🎬</span> Next up</span>
-        <h2 id="heroTitle" class="hero-title">—</h2>
-        <p id="heroMeta" class="hero-meta">—</p>
-        <div id="countdown" class="countdown">
-          <div class="cd"><b id="cdDays">0</b><i>days</i></div>
-          <div class="cd"><b id="cdHours">0</b><i>hrs</i></div>
-          <div class="cd"><b id="cdMins">0</b><i>min</i></div>
-          <div class="cd"><b id="cdSecs">0</b><i>sec</i></div>
-        </div>
-      </div>
+    <!-- Featured carousel -->
+    <section id="featured" class="featured" hidden>
+      <div id="featuredTrack" class="featured-track"></div>
+      <div id="featuredDots" class="featured-dots"></div>
     </section>
 
-    <!-- Events list -->
-    <section class="listing">
-      <div class="listing-head">
-        <h3>All events</h3>
-        <span id="countBadge" class="count-badge"></span>
-      </div>
-      <ul id="list" class="list"></ul>
+    <!-- Tabs -->
+    <nav class="tabs">
+      <button class="tab is-active" data-tab="upcoming">Upcoming</button>
+      <button class="tab" data-tab="past">Past</button>
+    </nav>
+
+    <!-- Grid -->
+    <section class="grid-wrap">
+      <div id="grid" class="grid"></div>
       <div id="empty" class="empty" hidden>
         <span>🎬</span>
-        <p>No upcoming events right now.</p>
+        <p id="emptyText">No upcoming events yet.</p>
       </div>
     </section>
   </main>
 
-  <!-- Add / edit event sheet -->
+  <!-- Floating add button (dev) -->
+  <button id="addBtn" class="fab" aria-label="Add event" hidden>
+    <svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+  </button>
+
+  <!-- Add / edit sheet -->
   <div id="sheet" class="sheet-backdrop" hidden>
     <div class="sheet" role="dialog" aria-modal="true" aria-label="Add event">
       <div class="sheet-grab"></div>
@@ -112,7 +101,7 @@
     </div>
   </div>
 
-  <!-- Dev login sheet -->
+  <!-- Dev login -->
   <div id="devSheet" class="sheet-backdrop" hidden>
     <div class="sheet" role="dialog" aria-modal="true" aria-label="Developer access">
       <div class="sheet-grab"></div>
@@ -132,13 +121,14 @@
     </div>
   </div>
 
-  <!-- Movie detail (full screen) -->
-  <div id="detailModal" class="detail-backdrop" hidden>
-    <div class="detail" role="dialog" aria-modal="true" aria-label="Event details">
-      <button id="detailClose" class="detail-close" aria-label="Close">✕</button>
-      <div id="detailHero" class="detail-hero">
+  <!-- Detail (full screen) -->
+  <div id="detailModal" class="detail" hidden>
+    <button id="detailClose" class="detail-close" aria-label="Close">✕</button>
+    <div class="detail-scroll" id="detailScroll">
+      <div class="detail-hero">
         <div id="detailBackdrop" class="detail-backdrop-img"></div>
-        <div class="detail-hero-overlay">
+        <div class="detail-hero-grad"></div>
+        <div class="detail-hero-bottom">
           <img id="detailPoster" class="detail-poster" alt="" hidden />
           <div class="detail-head-info">
             <h2 id="detailTitle" class="detail-title">—</h2>
@@ -149,11 +139,15 @@
       </div>
       <div class="detail-body">
         <div id="detailEventInfo" class="detail-event"></div>
+        <a id="trailerBtn" class="trailer-btn" target="_blank" rel="noopener" hidden>
+          <svg viewBox="0 0 24 24" width="18" height="18"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+          Watch trailer
+        </a>
         <div id="detailGenres" class="detail-genres"></div>
         <p id="detailOverview" class="detail-overview"></p>
         <div id="detailCastWrap" class="detail-section" hidden>
           <h3 class="detail-section-title">Cast</h3>
-          <div id="detailCast" class="cast-row"></div>
+          <div id="detailCast" class="cast-grid"></div>
         </div>
         <div id="detailLoading" class="detail-loading" hidden>Loading movie details…</div>
       </div>
