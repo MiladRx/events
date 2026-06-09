@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#08090d" />
+  <meta name="theme-color" content="#0a0b0f" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Upcoming" />
@@ -12,145 +12,142 @@
   <title>Upcoming</title>
   <link rel="stylesheet" href="/styles.css" />
 </head>
-<body class="splash-active">
+<body>
+  <!-- Splash -->
   <div id="splash" class="splash"><div class="spinner"></div></div>
 
-  <main class="app">
-    <!-- Header -->
+  <!-- Main app -->
+  <div class="app">
     <header class="hdr">
       <div>
-        <p class="hdr-eyebrow">What we're watching</p>
+        <p class="hdr-sub">What we're watching</p>
         <h1 class="hdr-title">Upcoming</h1>
       </div>
-      <button id="devBtn" class="dev-chip" aria-label="Developer access">Dev</button>
+      <button id="devBtn" class="dev-btn">Dev</button>
     </header>
 
-    <!-- Featured carousel -->
-    <section id="featured" class="featured" hidden>
-      <div id="featuredTrack" class="featured-track"></div>
-      <div id="featuredDots" class="featured-dots"></div>
-    </section>
+    <section id="hero" class="hero" hidden></section>
 
-    <!-- Tabs -->
     <nav class="tabs">
-      <button class="tab is-active" data-tab="upcoming">Upcoming</button>
+      <button class="tab active" data-tab="upcoming">Upcoming</button>
       <button class="tab" data-tab="past">Past</button>
     </nav>
 
-    <!-- Grid -->
-    <section class="grid-wrap">
-      <div id="grid" class="grid"></div>
-      <div id="empty" class="empty" hidden>
-        <span>🎬</span>
-        <p id="emptyText">No upcoming events yet.</p>
-      </div>
-    </section>
-  </main>
+    <div id="grid" class="grid"></div>
+    <div id="empty" class="empty" hidden>
+      <div class="empty-icon">🎬</div>
+      <p id="emptyText">No upcoming events</p>
+    </div>
+  </div>
 
-  <!-- Floating add button (dev) -->
-  <button id="addBtn" class="fab" aria-label="Add event" hidden>
-    <svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+  <!-- FAB -->
+  <button id="fab" class="fab" hidden>
+    <svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
   </button>
 
-  <!-- Add / edit sheet -->
-  <div id="sheet" class="sheet-backdrop" hidden>
-    <div class="sheet" role="dialog" aria-modal="true" aria-label="Add event">
-      <div class="sheet-grab"></div>
-      <h2 class="sheet-title" id="sheetTitle">New event</h2>
+  <!-- Add/Edit Sheet -->
+  <div id="sheet" class="sheet-overlay" hidden>
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 id="sheetTitle" class="sheet-title">New event</h2>
       <form id="form" class="form">
-        <label class="field movie-search" id="movieSearchWrap">
-          <span>Search movie <span class="hint">(TMDB)</span></span>
+        <div class="field-group movie-search-wrap">
+          <label class="label">Search movie <span class="hint">(TMDB)</span></label>
           <input id="movieSearch" type="text" autocomplete="off" placeholder="Type a movie name…" />
           <div id="searchResults" class="search-results" hidden></div>
-        </label>
-        <label class="field">
-          <span>Title</span>
-          <input name="title" required placeholder="The Odyssey" />
-        </label>
-        <div class="field-row">
-          <label class="field" style="width:84px">
-            <span>Emoji</span>
-            <input name="emoji" placeholder="🎬" maxlength="2" />
-          </label>
-          <label class="field grow">
-            <span>Category</span>
-            <input name="category" placeholder="Cinema" />
-          </label>
         </div>
-        <label class="field">
-          <span>Location</span>
+        <div class="field-group">
+          <label class="label">Title</label>
+          <input name="title" required placeholder="The Odyssey" />
+        </div>
+        <div class="field-row">
+          <div class="field-group" style="width:80px">
+            <label class="label">Emoji</label>
+            <input name="emoji" placeholder="🎬" maxlength="2" />
+          </div>
+          <div class="field-group flex-1">
+            <label class="label">Category</label>
+            <input name="category" placeholder="Cinema" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="label">Location</label>
           <input name="location" placeholder="Optional" />
-        </label>
-        <label class="field">
-          <span>Poster image URL <span class="hint">(optional)</span></span>
+        </div>
+        <div class="field-group">
+          <label class="label">Poster URL <span class="hint">(optional)</span></label>
           <input name="poster" type="url" placeholder="https://image.tmdb.org/.../poster.jpg" />
-        </label>
-        <label class="field">
-          <span>Date &amp; time</span>
+        </div>
+        <div class="field-group">
+          <label class="label">Date &amp; time</label>
           <input name="date" type="datetime-local" required />
-        </label>
-        <label class="field">
-          <span>Notes</span>
-          <textarea name="notes" rows="2" placeholder="Grab tickets early!"></textarea>
-        </label>
-        <div class="sheet-actions">
-          <button type="button" id="cancelBtn" class="btn ghost">Cancel</button>
+        </div>
+        <div class="field-group">
+          <label class="label">Notes</label>
+          <textarea name="notes" rows="2" placeholder="Additional details…"></textarea>
+        </div>
+        <div class="actions">
+          <button type="button" id="cancelBtn" class="btn secondary">Cancel</button>
           <button type="submit" id="submitBtn" class="btn primary">Add event</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Dev login -->
-  <div id="devSheet" class="sheet-backdrop" hidden>
-    <div class="sheet" role="dialog" aria-modal="true" aria-label="Developer access">
-      <div class="sheet-grab"></div>
+  <!-- Dev Sheet -->
+  <div id="devSheet" class="sheet-overlay" hidden>
+    <div class="sheet">
+      <div class="sheet-handle"></div>
       <h2 class="sheet-title">Developer access</h2>
-      <p class="sheet-sub">Enter the password to add, edit, or remove events.</p>
+      <p class="sheet-desc">Enter password to manage events</p>
       <form id="devForm" class="form">
-        <label class="field">
-          <span>Password</span>
+        <div class="field-group">
+          <label class="label">Password</label>
           <input name="password" type="password" inputmode="numeric" autocomplete="off" placeholder="••••••" required />
-        </label>
-        <p id="devError" class="dev-error" hidden>Wrong password. Try again.</p>
-        <div class="sheet-actions">
-          <button type="button" id="devCancelBtn" class="btn ghost">Cancel</button>
+        </div>
+        <p id="devError" class="error-msg" hidden>Incorrect password</p>
+        <div class="actions">
+          <button type="button" id="devCancelBtn" class="btn secondary">Cancel</button>
           <button type="submit" class="btn primary">Unlock</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Detail (full screen) -->
-  <div id="detailModal" class="detail" hidden>
-    <button id="detailClose" class="detail-close" aria-label="Close">✕</button>
-    <div class="detail-scroll" id="detailScroll">
-      <div class="detail-hero">
-        <div id="detailBackdrop" class="detail-backdrop-img"></div>
-        <div class="detail-hero-grad"></div>
-        <div class="detail-hero-bottom">
-          <img id="detailPoster" class="detail-poster" alt="" hidden />
-          <div class="detail-head-info">
-            <h2 id="detailTitle" class="detail-title">—</h2>
-            <p id="detailTagline" class="detail-tagline"></p>
-            <div id="detailMeta" class="detail-meta"></div>
-          </div>
+  <!-- Detail Modal -->
+  <div id="detail" class="detail" hidden>
+    <div class="detail-header">
+      <div id="detailBackdrop" class="detail-backdrop"></div>
+      <div class="detail-header-overlay"></div>
+      <button id="closeDetail" class="detail-close">✕</button>
+      <div class="detail-header-content">
+        <img id="detailPoster" class="detail-poster" alt="" hidden />
+        <div class="detail-info">
+          <h2 id="detailTitle" class="detail-title">—</h2>
+          <p id="detailTagline" class="detail-tagline"></p>
+          <div id="detailMeta" class="detail-meta"></div>
         </div>
       </div>
-      <div class="detail-body">
-        <div id="detailEventInfo" class="detail-event"></div>
-        <a id="trailerBtn" class="trailer-btn" target="_blank" rel="noopener" hidden>
-          <svg viewBox="0 0 24 24" width="18" height="18"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
-          Watch trailer
-        </a>
-        <div id="detailGenres" class="detail-genres"></div>
-        <p id="detailOverview" class="detail-overview"></p>
-        <div id="detailCastWrap" class="detail-section" hidden>
-          <h3 class="detail-section-title">Cast</h3>
-          <div id="detailCast" class="cast-grid"></div>
-        </div>
-        <div id="detailLoading" class="detail-loading" hidden>Loading movie details…</div>
+    </div>
+
+    <div class="detail-content">
+      <div id="detailEvent" class="detail-event"></div>
+      
+      <a id="trailerBtn" class="trailer-btn" target="_blank" rel="noopener" hidden>
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+        Watch trailer
+      </a>
+      
+      <div id="detailGenres" class="genres"></div>
+      
+      <p id="detailOverview" class="overview"></p>
+      
+      <div id="castSection" class="cast-section" hidden>
+        <h3 class="section-title">Cast</h3>
+        <div id="cast" class="cast"></div>
       </div>
+      
+      <div id="detailLoading" class="loading-msg" hidden>Loading details…</div>
     </div>
   </div>
 
