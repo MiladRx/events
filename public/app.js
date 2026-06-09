@@ -1,3 +1,11 @@
+// ---------- Viewport height fix (iOS Safari toolbar) ----------
+function setAppHeight() {
+  document.documentElement.style.setProperty("--app-height", `${window.innerHeight}px`);
+}
+setAppHeight();
+window.addEventListener("resize", setAppHeight);
+window.addEventListener("orientationchange", setAppHeight);
+
 // ---------- State ----------
 let events = [];
 let activeTab = "upcoming";
