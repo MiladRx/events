@@ -1,16 +1,29 @@
 # Upcoming · Events
 
-A mobile-first web app to track upcoming events. Built with an iOS 26 "Liquid Glass" look — frosted glass cards and a live countdown to your next event.
+A phone-first web app to track upcoming events. Dark, poster-forward interface with a live countdown to whatever's next.
 
 First event seeded: **The Odyssey** 🎬 (16 July 2026).
 
 ## Features
 
-- Live countdown to the next event (days / hrs / min / sec)
+- Live countdown to the next event (days / hrs / min / sec), paused while the tab is hidden
 - **Movie search** in the Add Event sheet (powered by TMDB) — pick a film and it auto-fills the title, poster, and release date
-- Add / edit / delete events (dev mode only)
-- Sorted soonest-first, past events dimmed
+- Add / edit / delete events with confirmation (dev mode only)
+- Sorted soonest-first, past events dimmed under their own tab
 - Installable as a home-screen app (PWA), full-screen on iOS with safe-area support
+
+## Responsive behaviour
+
+The front end is built to work on any screen from a 280px folded phone to a wide desktop:
+
+- **Fluid everything** — type, spacing and component sizes scale with `clamp()`; no fixed-width layout anywhere
+- **Poster grid** steps 2 → 3 → 4 → 5 → 6 columns as width allows
+- **Sheets** are bottom sheets (with swipe-to-dismiss) on phones and centred dialogs from 640px up
+- **Detail view** is full-screen on phones and a centred modal card from 900px up; the hero shrinks in landscape so the title stays on screen
+- **Safe areas** — notch, home indicator and landscape side insets are honoured on every fixed element
+- **Keyboard-aware** — `visualViewport` measures the on-screen keyboard so sheets lift above it; all inputs are 16px so iOS never zooms on focus
+- **Responsive images** — TMDB posters are served via `srcset` at w185/w342/w500 so phones don't download desktop-sized art
+- **Accessible** — pinch-zoom stays enabled, dialogs trap focus and restore it, Escape and the browser back button close overlays, tap targets are at least 32px, and `prefers-reduced-motion` is respected
 
 ## Setup: TMDB API key (for movie search)
 

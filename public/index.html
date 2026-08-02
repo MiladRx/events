@@ -2,155 +2,278 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0a0b0f" />
+  <!-- viewport-fit=cover for notch/safe areas. Pinch-zoom is intentionally left
+       enabled (no maximum-scale / user-scalable=no) — blocking it breaks
+       accessibility and iOS ignores it anyway. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#08090e" />
+  <meta name="description" content="Track your upcoming events with a live countdown." />
+  <!-- Stop iOS from turning dates/times in event text into tappable links -->
+  <meta name="format-detection" content="telephone=no,date=no,address=no,email=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Upcoming" />
-  <link rel="apple-touch-icon" href="/icon.svg" />
+  <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icon-180.png" />
   <link rel="manifest" href="/manifest.json" />
+  <link rel="preconnect" href="https://image.tmdb.org" crossorigin />
+  <link rel="dns-prefetch" href="https://image.tmdb.org" />
   <title>Upcoming</title>
   <link rel="stylesheet" href="/styles.css" />
 </head>
-<body>
+<body class="is-booting">
   <!-- Splash -->
-  <div id="splash" class="splash"><div class="spinner"></div></div>
-
-  <!-- Main app -->
-  <div class="app">
-    <header class="hdr">
-      <div>
-        
-        <h1 class="hdr-title">Upcoming</h1>
-      </div>
-      <button id="devBtn" class="dev-btn">Dev</button>
-    </header>
-
-    <section id="hero" class="hero" hidden></section>
-
-    <nav class="tabs">
-      <button class="tab active" data-tab="upcoming">Upcoming</button>
-      <button class="tab" data-tab="past">Past</button>
-    </nav>
-
-    <div id="grid" class="grid"></div>
-    <div id="empty" class="empty" hidden>
-      <div class="empty-icon">🎬</div>
-      <p id="emptyText">No upcoming events</p>
+  <div id="splash" class="splash" role="status" aria-label="Loading">
+    <div class="splash-mark">
+      <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6" />
+        <path d="M10.2 8.4 16 12l-5.8 3.6z" fill="currentColor" />
+      </svg>
     </div>
+    <div class="spinner" aria-hidden="true"></div>
   </div>
 
-  <!-- FAB -->
-  <button id="fab" class="fab" hidden>
-    <svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <div class="brand">
+        <span class="brand-glyph" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8" />
+            <path d="M10.2 8.4 16 12l-5.8 3.6z" fill="currentColor" />
+          </svg>
+        </span>
+        <h1 class="brand-name">Upcoming</h1>
+      </div>
+      <button id="devBtn" class="dev-btn" type="button" aria-pressed="false">
+        <svg class="dev-icon" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+          <path class="dev-shackle" d="M8 10V7.5a4 4 0 0 1 8 0V10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <rect x="5" y="10" width="14" height="10" rx="3" fill="currentColor" />
+        </svg>
+        <span id="devBtnLabel" class="dev-btn-label">Dev</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main" class="shell main">
+    <!-- Next-up hero -->
+    <section id="hero" class="hero" hidden aria-label="Next event"></section>
+
+    <!-- List -->
+    <section class="board" aria-label="All events">
+      <div class="tabs" role="tablist" aria-label="Filter events">
+        <span class="tabs-indicator" aria-hidden="true"></span>
+        <button id="tab-upcoming" class="tab is-active" type="button" role="tab"
+                data-tab="upcoming" aria-selected="true" aria-controls="grid">
+          <span>Upcoming</span><span class="tab-count" data-count="upcoming">0</span>
+        </button>
+        <button id="tab-past" class="tab" type="button" role="tab"
+                data-tab="past" aria-selected="false" aria-controls="grid" tabindex="-1">
+          <span>Past</span><span class="tab-count" data-count="past">0</span>
+        </button>
+      </div>
+
+      <div id="grid" class="grid" role="tabpanel" aria-labelledby="tab-upcoming" tabindex="-1"></div>
+
+      <div id="empty" class="state" hidden>
+        <div class="state-icon" aria-hidden="true">🎬</div>
+        <p id="emptyText" class="state-text">No upcoming events</p>
+        <p class="state-sub">Unlock Dev mode to add one.</p>
+      </div>
+
+      <div id="loadError" class="state" hidden>
+        <div class="state-icon" aria-hidden="true">📡</div>
+        <p class="state-text">Couldn’t load events</p>
+        <p class="state-sub">Check your connection and try again.</p>
+        <button id="retryBtn" class="btn primary state-btn" type="button">Retry</button>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <p>Movie data &amp; images from <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">TMDB</a>.</p>
+    </footer>
+  </main>
+
+  <!-- Add button -->
+  <button id="fab" class="fab" type="button" hidden aria-label="Add event">
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+    </svg>
   </button>
 
-  <!-- Add/Edit Sheet -->
-  <div id="sheet" class="sheet-overlay" hidden>
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <h2 id="sheetTitle" class="sheet-title">New event</h2>
-      <form id="form" class="form">
-        <div class="field-group movie-search-wrap">
-          <label class="label">Search movie <span class="hint">(TMDB)</span></label>
-          <input id="movieSearch" type="text" autocomplete="off" placeholder="Type a movie name…" />
-          <div id="searchResults" class="search-results" hidden></div>
-        </div>
-        <div class="field-group">
-          <label class="label">Title</label>
-          <input name="title" required placeholder="The Odyssey" />
-        </div>
-        <div class="field-row">
-          <div class="field-group" style="width:80px">
-            <label class="label">Emoji</label>
-            <input name="emoji" placeholder="🎬" maxlength="2" />
+  <!-- Add / edit sheet -->
+  <div id="sheet" class="overlay" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div class="sheet-grab" aria-hidden="true"><span></span></div>
+      <div class="sheet-head">
+        <h2 id="sheetTitle" class="sheet-title">New event</h2>
+        <button type="button" class="icon-btn sheet-x" data-close="sheet" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <form id="form" class="form" novalidate>
+        <div class="field search-field">
+          <label class="label" for="movieSearch">Search movie <span class="hint">TMDB</span></label>
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/>
+              <path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input id="movieSearch" type="search" autocomplete="off" autocorrect="off"
+                   spellcheck="false" enterkeyhint="search" placeholder="Type a movie name…"
+                   aria-describedby="searchStatus" />
           </div>
-          <div class="field-group flex-1">
-            <label class="label">Category</label>
-            <input name="category" placeholder="Cinema" />
+          <p id="searchStatus" class="sr-only" role="status" aria-live="polite"></p>
+          <div id="searchResults" class="results" hidden></div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="f-title">Title</label>
+          <input id="f-title" name="title" required enterkeyhint="next" placeholder="The Odyssey" />
+        </div>
+
+        <div class="row">
+          <div class="field field-emoji">
+            <label class="label" for="f-emoji">Emoji</label>
+            <input id="f-emoji" name="emoji" maxlength="4" placeholder="🎬" autocomplete="off" />
+          </div>
+          <div class="field grow">
+            <label class="label" for="f-category">Category</label>
+            <input id="f-category" name="category" placeholder="Cinema" enterkeyhint="next" />
           </div>
         </div>
-        <div class="field-group">
-          <label class="label">Location</label>
-          <input name="location" placeholder="Optional" />
+
+        <div class="field">
+          <label class="label" for="f-date">Date &amp; time</label>
+          <input id="f-date" name="date" type="datetime-local" required />
         </div>
-        <div class="field-group">
-          <label class="label">Poster URL <span class="hint">(optional)</span></label>
-          <input name="poster" type="url" placeholder="https://image.tmdb.org/.../poster.jpg" />
+
+        <div class="field">
+          <label class="label" for="f-location">Location <span class="hint">optional</span></label>
+          <input id="f-location" name="location" placeholder="Cinema City" enterkeyhint="next" />
         </div>
-        <div class="field-group">
-          <label class="label">Date &amp; time</label>
-          <input name="date" type="datetime-local" required />
+
+        <div class="field">
+          <label class="label" for="f-poster">Poster URL <span class="hint">optional</span></label>
+          <input id="f-poster" name="poster" type="url" inputmode="url" autocapitalize="off"
+                 autocomplete="off" spellcheck="false" placeholder="https://image.tmdb.org/…" />
         </div>
-        <div class="field-group">
-          <label class="label">Notes</label>
-          <textarea name="notes" rows="2" placeholder="Additional details…"></textarea>
+
+        <div class="field">
+          <label class="label" for="f-notes">Notes <span class="hint">optional</span></label>
+          <textarea id="f-notes" name="notes" rows="2" placeholder="Additional details…"></textarea>
         </div>
+
+        <p id="formError" class="msg error" hidden></p>
+
         <div class="actions">
-          <button type="button" id="cancelBtn" class="btn secondary">Cancel</button>
+          <button type="button" class="btn secondary" data-close="sheet">Cancel</button>
           <button type="submit" id="submitBtn" class="btn primary">Add event</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Dev Sheet -->
-  <div id="devSheet" class="sheet-overlay" hidden>
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <h2 class="sheet-title">Developer access</h2>
-      <p class="sheet-desc">Enter password to manage events</p>
+  <!-- Dev unlock sheet -->
+  <div id="devSheet" class="overlay" hidden>
+    <div class="sheet sheet-sm" role="dialog" aria-modal="true" aria-labelledby="devTitle">
+      <div class="sheet-grab" aria-hidden="true"><span></span></div>
+      <div class="sheet-head">
+        <h2 id="devTitle" class="sheet-title">Developer access</h2>
+        <button type="button" class="icon-btn sheet-x" data-close="devSheet" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <p class="sheet-desc">Enter the password to add, edit and delete events.</p>
       <form id="devForm" class="form">
-        <div class="field-group">
-          <label class="label">Password</label>
-          <input name="password" type="password" inputmode="numeric" autocomplete="off" placeholder="••••••" required />
+        <div class="field">
+          <label class="label" for="f-pass">Password</label>
+          <input id="f-pass" name="password" type="password" inputmode="numeric"
+                 autocomplete="current-password" enterkeyhint="go" placeholder="••••••" required />
         </div>
-        <p id="devError" class="error-msg" hidden>Incorrect password</p>
+        <p id="devError" class="msg error" hidden>Incorrect password</p>
         <div class="actions">
-          <button type="button" id="devCancelBtn" class="btn secondary">Cancel</button>
+          <button type="button" class="btn secondary" data-close="devSheet">Cancel</button>
           <button type="submit" class="btn primary">Unlock</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Detail Modal -->
-  <div id="detail" class="detail" hidden>
-    <div class="detail-header">
-      <div id="detailBackdrop" class="detail-backdrop"></div>
-      <div class="detail-header-overlay"></div>
-      <button id="closeDetail" class="detail-close">✕</button>
-      <div class="detail-header-content">
-        <img id="detailPoster" class="detail-poster" alt="" hidden />
-        <div class="detail-info">
-          <h2 id="detailTitle" class="detail-title">—</h2>
-          <p id="detailTagline" class="detail-tagline"></p>
-          <div id="detailMeta" class="detail-meta"></div>
-        </div>
+  <!-- Confirm dialog -->
+  <div id="confirm" class="overlay" hidden>
+    <div class="sheet sheet-sm" role="alertdialog" aria-modal="true"
+         aria-labelledby="confirmTitle" aria-describedby="confirmText">
+      <div class="sheet-grab" aria-hidden="true"><span></span></div>
+      <h2 id="confirmTitle" class="sheet-title">Delete event?</h2>
+      <p id="confirmText" class="sheet-desc">This can’t be undone.</p>
+      <div class="actions">
+        <button type="button" id="confirmCancel" class="btn secondary">Cancel</button>
+        <button type="button" id="confirmOk" class="btn danger">Delete</button>
       </div>
-    </div>
-
-    <div class="detail-content">
-      <div id="detailEvent" class="detail-event"></div>
-      
-      <a id="trailerBtn" class="trailer-btn" target="_blank" rel="noopener" hidden>
-        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
-        Watch trailer
-      </a>
-      
-      <div id="detailGenres" class="genres"></div>
-      
-      <p id="detailOverview" class="overview"></p>
-      
-      <div id="castSection" class="cast-section" hidden>
-        <h3 class="section-title">Cast</h3>
-        <div id="cast" class="cast"></div>
-      </div>
-      
-      <div id="detailLoading" class="loading-msg" hidden>Loading details…</div>
     </div>
   </div>
 
-  <script src="/app.js"></script>
+  <!-- Detail view -->
+  <div id="detail" class="detail" hidden>
+    <div class="detail-shell" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+      <button id="closeDetail" class="icon-btn detail-close" type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+
+      <div class="detail-panel" id="detailPanel">
+        <div class="detail-hero">
+          <img id="detailBackdrop" class="detail-backdrop" alt="" decoding="async" hidden />
+          <div class="detail-hero-fade" aria-hidden="true"></div>
+          <div class="detail-hero-body">
+            <img id="detailPoster" class="detail-poster" alt="" decoding="async" hidden />
+            <div class="detail-head">
+              <h2 id="detailTitle" class="detail-title">—</h2>
+              <p id="detailTagline" class="detail-tagline" hidden></p>
+              <div id="detailMeta" class="chips"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-body">
+          <div id="detailEvent" class="detail-event"></div>
+
+          <div class="detail-cta">
+            <a id="trailerBtn" class="btn primary trailer-btn" target="_blank" rel="noopener noreferrer" hidden>
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+              Watch trailer
+            </a>
+            <div id="detailDevActions" class="detail-dev" hidden>
+              <button type="button" id="detailEdit" class="btn secondary">Edit</button>
+              <button type="button" id="detailDelete" class="btn secondary danger-ghost">Delete</button>
+            </div>
+          </div>
+
+          <div id="detailGenres" class="chips genres"></div>
+
+          <div class="overview-wrap">
+            <p id="detailOverview" class="overview"></p>
+            <button type="button" id="overviewToggle" class="link-btn" hidden aria-expanded="false">Read more</button>
+          </div>
+
+          <section id="castSection" class="cast-section" hidden aria-labelledby="castTitle">
+            <h3 id="castTitle" class="section-title">Cast</h3>
+            <div id="cast" class="cast"></div>
+          </section>
+
+          <p id="detailLoading" class="msg muted" hidden>Loading details…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="/app.js" defer></script>
 </body>
 </html>
