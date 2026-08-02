@@ -1,18 +1,40 @@
 {
-  "name": "Upcoming",
+  "name": "Upcoming · Events",
   "short_name": "Upcoming",
-  "description": "Track upcoming events",
+  "description": "Track upcoming events with a live countdown.",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#05060a",
-  "theme_color": "#05060a",
-  "orientation": "portrait",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "background_color": "#08090e",
+  "theme_color": "#08090e",
+  "orientation": "any",
+  "categories": ["entertainment", "lifestyle", "utilities"],
   "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
     {
       "src": "/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
