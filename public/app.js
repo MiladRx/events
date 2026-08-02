@@ -18,16 +18,21 @@ const $ = (id) => document.getElementById(id);
 
 const el = {
   splash: $("splash"),
+  nav: $("nav"),
+  navTitle: $("navTitle"),
+  masthead: document.querySelector(".masthead"),
+  titleLg: document.querySelector(".title-lg"),
+  summary: $("summary"),
   hero: $("hero"),
   grid: $("grid"),
   empty: $("empty"),
   emptyText: $("emptyText"),
   loadError: $("loadError"),
   retryBtn: $("retryBtn"),
+  dock: $("dock"),
   fab: $("fab"),
   devBtn: $("devBtn"),
   devBtnLabel: $("devBtnLabel"),
-  tabs: document.querySelector(".tabs"),
   sheet: $("sheet"),
   sheetTitle: $("sheetTitle"),
   form: $("form"),
@@ -38,7 +43,6 @@ const el = {
   devError: $("devError"),
   fPass: $("f-pass"),
   confirm: $("confirm"),
-  confirmTitle: $("confirmTitle"),
   confirmText: $("confirmText"),
   confirmOk: $("confirmOk"),
   confirmCancel: $("confirmCancel"),
@@ -74,9 +78,9 @@ const el = {
   toast: $("toast")
 };
 
-// ---------- Small helpers ----------
+// ---------- Helpers ----------
 const isDev = () => !!devKey;
-const isPast = (e) => new Date(e.date).getTime() < Date.now();
+const isSeen = (e) => new Date(e.date).getTime() < Date.now();
 
 function fmtDate(iso) {
   const d = new Date(iso);
@@ -91,7 +95,7 @@ function relative(iso) {
   const t = new Date(iso).getTime();
   if (isNaN(t)) return "TBC";
   const diff = t - Date.now();
-  if (diff <= 0) return "Past";
+  if (diff <= 0) return "Seen";
   const days = Math.floor(diff / 86400000);
   if (days >= 2) return `in ${days} days`;
   if (days === 1) return "tomorrow";
@@ -131,9 +135,7 @@ async function fetchJSON(url, options = {}, timeoutMs = 15000) {
   try {
     const res = await fetch(url, { ...options, signal: ctrl.signal });
     let data = null;
-    if (res.status !== 204) {
-      data = await res.json().catch(() => null);
-    }
+    if (res.status !== 204) data = await res.json().catch(() => null);
     return { ok: res.ok, status: res.status, data };
   } catch {
     return { ok: false, status: 0, data: null };
@@ -153,7 +155,7 @@ function toast(message, kind = "") {
   );
   toastTimer = setTimeout(() => {
     el.toast.classList.remove("is-on");
-    toastTimer = setTimeout(() => { el.toast.hidden = true; }, 300);
+    toastTimer = setTimeout(() => { el.toast.hidden = true; }, 320);
   }, 2600);
 }
 
@@ -285,8 +287,8 @@ document.querySelectorAll("[data-close]").forEach((btn) =>
 );
 el.closeDetail.addEventListener("click", closeOverlay);
 
-// Swipe the grab handle down to dismiss a sheet (phones only).
-document.querySelectorAll(".sheet-grab").forEach((grab) => {
+// Drag the grabber down to dismiss a sheet.
+document.querySelectorAll(".grabber").forEach((grab) => {
   const sheet = grab.closest(".sheet");
   let startY = 0;
   let dy = 0;
@@ -312,10 +314,9 @@ document.querySelectorAll(".sheet-grab").forEach((grab) => {
       closeOverlay();
       return;
     }
-    // Spring back instead of snapping.
-    sheet.style.transition = "transform .24s cubic-bezier(.22,1,.36,1)";
+    sheet.style.transition = "transform .34s cubic-bezier(.32,.72,0,1)";
     sheet.style.transform = "";
-    setTimeout(() => { sheet.style.transition = ""; }, 260);
+    setTimeout(() => { sheet.style.transition = ""; }, 360);
   };
   grab.addEventListener("pointerup", end);
   grab.addEventListener("pointercancel", end);
@@ -328,7 +329,7 @@ async function loadEvents({ showError = true } = {}) {
     if (showError && !events.length) {
       el.loadError.hidden = false;
       el.empty.hidden = true;
-      el.grid.innerHTML = "";
+      el.grid.replaceChildren();
     }
     return false;
   }
@@ -342,41 +343,44 @@ async function loadEvents({ showError = true } = {}) {
 // ---------- Render ----------
 function splitEvents() {
   const upcoming = [];
-  const past = [];
-  for (const e of events) (isPast(e) ? past : upcoming).push(e);
+  const seen = [];
+  for (const e of events) (isSeen(e) ? seen : upcoming).push(e);
   upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
-  past.sort((a, b) => new Date(b.date) - new Date(a.date));
-  return { upcoming, past };
+  seen.sort((a, b) => new Date(b.date) - new Date(a.date));
+  return { upcoming, seen };
 }
 
 let heroEventId = null;
 let heroDeadline = null;
 
 function render() {
-  const { upcoming, past } = splitEvents();
+  const { upcoming, seen } = splitEvents();
 
   document.querySelector('[data-count="upcoming"]').textContent = upcoming.length;
-  document.querySelector('[data-count="past"]').textContent = past.length;
+  document.querySelector('[data-count="seen"]').textContent = seen.length;
+  el.summary.textContent = events.length
+    ? `${upcoming.length} coming up · ${seen.length} seen`
+    : "Nothing tracked yet";
 
   renderHero(upcoming[0] || null);
 
-  const shown = activeTab === "upcoming" ? upcoming : past;
+  const shown = activeTab === "upcoming" ? upcoming : seen;
   el.grid.replaceChildren();
   shown.forEach((e, i) => el.grid.appendChild(buildCard(e, i)));
 
   el.empty.hidden = shown.length > 0 || !el.loadError.hidden;
   el.emptyText.textContent =
-    activeTab === "upcoming" ? "No upcoming events" : "Nothing in the past";
+    activeTab === "upcoming" ? "Nothing coming up" : "Nothing seen yet";
 }
 
 function buildCard(e, index) {
   const card = document.createElement("div");
-  card.className = "card" + (isPast(e) ? " is-past" : "");
+  card.className = "card" + (isSeen(e) ? " is-seen" : "");
   card.style.animationDelay = `${Math.min(index * 0.04, 0.32)}s`;
 
-  /* The whole card is one button — poster, title and date together — so the
-     tap target is the full tile rather than a line of text. Dev actions sit
-     alongside it (buttons can't legally nest). */
+  /* The whole tile is one button — poster, title and date together — so the
+     tap target is the full card. Dev actions sit alongside it, since buttons
+     can't legally nest. */
   const shot = document.createElement("button");
   shot.type = "button";
   shot.className = "card-shot";
@@ -393,7 +397,7 @@ function buildCard(e, index) {
     img.loading = "lazy";
     img.decoding = "async";
     img.sizes =
-      "(max-width:519px) 46vw, (max-width:759px) 30vw, (max-width:999px) 23vw, (max-width:1239px) 18vw, 190px";
+      "(max-width:519px) 46vw, (max-width:759px) 30vw, (max-width:999px) 23vw, (max-width:1259px) 18vw, 190px";
     if (srcset) img.srcset = srcset;
     img.src = src;
     img.addEventListener("load", () => img.classList.add("is-loaded"));
@@ -426,11 +430,11 @@ function buildCard(e, index) {
   if (isDev()) {
     const actions = document.createElement("div");
     actions.className = "card-actions";
-    actions.appendChild(cardButton("edit", "\u270e", `Edit ${e.title}`, (ev) => {
+    actions.appendChild(cardButton("edit", "✎", `Edit ${e.title}`, (ev) => {
       ev.stopPropagation();
       openEditSheet(e.id);
     }));
-    actions.appendChild(cardButton("del", "\u2715", `Delete ${e.title}`, (ev) => {
+    actions.appendChild(cardButton("del", "✕", `Delete ${e.title}`, (ev) => {
       ev.stopPropagation();
       askDelete(e);
     }));
@@ -464,6 +468,7 @@ function renderHero(top) {
   if (!top) {
     el.hero.hidden = true;
     el.hero.replaceChildren();
+    el.hero.onclick = null;
     stopClock();
     return;
   }
@@ -471,29 +476,16 @@ function renderHero(top) {
   el.hero.hidden = false;
   el.hero.replaceChildren();
 
-  const media = document.createElement("div");
-  media.className = "hero-media";
-  const art = heroArtFor(top);
-  if (art) media.style.backgroundImage = `url("${encodeURI(art)}")`;
+  const art = document.createElement("div");
+  art.className = "hero-art";
+  const src = heroArtFor(top);
+  if (src) art.style.backgroundImage = `url("${encodeURI(src)}")`;
 
-  const body = document.createElement("div");
-  body.className = "hero-body";
+  const inner = document.createElement("div");
+  inner.className = "hero-inner";
 
-  if (top.poster) {
-    const poster = document.createElement("img");
-    poster.className = "hero-poster";
-    poster.alt = "";
-    poster.decoding = "async";
-    const { src, srcset } = posterSrc(top.poster);
-    if (srcset) poster.srcset = srcset;
-    poster.sizes = "(max-width:640px) 22vw, 108px";
-    poster.src = src;
-    poster.addEventListener("error", () => poster.remove());
-    body.appendChild(poster);
-  }
-
-  const text = document.createElement("div");
-  text.className = "hero-text";
+  const panel = document.createElement("div");
+  panel.className = "hero-panel";
 
   const badge = document.createElement("span");
   badge.className = "hero-badge";
@@ -507,15 +499,15 @@ function renderHero(top) {
   when.className = "hero-date";
   when.textContent = fmtDate(top.date);
 
-  const cd = document.createElement("div");
-  cd.className = "hero-countdown";
-  cd.append(...["days", "hrs", "min", "sec"].map(cdBox));
+  const count = document.createElement("div");
+  count.className = "hero-count";
+  count.append(...["days", "hrs", "min", "sec"].map(cdBox));
 
-  text.append(badge, h2, when, cd);
-  body.append(text);
-  el.hero.append(media, body);
+  panel.append(badge, h2, when, count);
+  inner.append(panel);
+  el.hero.append(art, inner);
 
-  // Rebuilt every render, so exactly one listener exists at any time.
+  // Rebuilt every render, so exactly one handler exists at any time.
   el.hero.onclick = () => openDetail(top);
   el.hero.setAttribute("role", "button");
   el.hero.setAttribute("tabindex", "0");
@@ -528,7 +520,7 @@ function renderHero(top) {
 
 function cdBox(label) {
   const box = document.createElement("div");
-  box.className = "cd-box";
+  box.className = "cd";
   const num = document.createElement("span");
   num.className = "cd-num";
   num.dataset.unit = label;
@@ -567,7 +559,7 @@ function clockTick() {
   const diff = heroDeadline - Date.now();
 
   if (diff <= 0) {
-    // The next event just started — move it to Past and promote the one after.
+    // The next event just started — move it to Seen and promote the one after.
     stopClock();
     render();
     return;
@@ -602,27 +594,55 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
+// ---------- Scroll-driven chrome ----------
+/* The nav takes on its glass once the large title slides underneath it, and
+   the dock recedes slightly while reading downward — both iOS 26 behaviours. */
+let lastScrollY = 0;
+let scrollQueued = false;
+
+function syncChrome() {
+  scrollQueued = false;
+  const navBottom = el.nav.offsetHeight;
+  const titleBottom = el.titleLg ? el.titleLg.getBoundingClientRect().bottom : 0;
+  el.nav.classList.toggle("is-solid", titleBottom <= navBottom - 2);
+
+  const y = window.scrollY || 0;
+  if (Math.abs(y - lastScrollY) > 8) {
+    el.dock.classList.toggle("is-shrunk", y > lastScrollY && y > 140);
+    lastScrollY = y;
+  }
+}
+
+window.addEventListener("scroll", () => {
+  if (scrollQueued) return;
+  scrollQueued = true;
+  requestAnimationFrame(syncChrome);
+}, { passive: true });
+window.addEventListener("resize", () => requestAnimationFrame(syncChrome));
+
 // ---------- Tabs ----------
-document.querySelectorAll(".tab").forEach((tab) => {
+document.querySelectorAll(".seg-tab").forEach((tab) => {
   tab.addEventListener("click", () => selectTab(tab.dataset.tab));
   tab.addEventListener("keydown", (ev) => {
     if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
     ev.preventDefault();
-    selectTab(activeTab === "upcoming" ? "past" : "upcoming", { focus: true });
+    selectTab(activeTab === "upcoming" ? "seen" : "upcoming", { focus: true });
   });
 });
 
 function selectTab(name, { focus = false } = {}) {
-  if (name !== "upcoming" && name !== "past") return;
+  if (name !== "upcoming" && name !== "seen") return;
   activeTab = name;
-  el.tabs.dataset.active = name;
-  document.querySelectorAll(".tab").forEach((t) => {
+  el.dock.dataset.active = name;
+  document.querySelectorAll(".seg-tab").forEach((t) => {
     const on = t.dataset.tab === name;
     t.classList.toggle("is-active", on);
     t.setAttribute("aria-selected", String(on));
     t.tabIndex = on ? 0 : -1;
-    if (on && focus) t.focus();
-    if (on) el.grid.setAttribute("aria-labelledby", t.id);
+    if (on) {
+      el.grid.setAttribute("aria-labelledby", t.id);
+      if (focus) t.focus();
+    }
   });
   render();
 }
@@ -976,7 +996,7 @@ function openDetail(e) {
   setBackdrop(e.poster || "");
 
   el.detailEvent.replaceChildren(
-    line("detail-when", `📅 ${fmtDate(e.date)} · ${isPast(e) ? "Past" : relative(e.date)}`),
+    line("detail-when", `📅 ${fmtDate(e.date)} · ${isSeen(e) ? "Seen" : relative(e.date)}`),
     ...(e.location ? [line("detail-loc", `📍 ${e.location}`)] : []),
     ...(e.category ? [line("detail-cat", `🏷️ ${e.category}`)] : [])
   );
@@ -1101,8 +1121,7 @@ function emptyFace() {
 function fitOverview() {
   requestAnimationFrame(() => {
     const o = el.detailOverview;
-    const clipped = o.scrollHeight - o.clientHeight > 4;
-    el.overviewToggle.hidden = !clipped;
+    el.overviewToggle.hidden = o.scrollHeight - o.clientHeight <= 4;
   });
 }
 
@@ -1152,8 +1171,8 @@ async function prefetchDetails() {
       const movie = await fetchMovie(id);
       // Upgrade the hero to a proper wide backdrop once we have one.
       if (movie && movie.backdrop && e.id === heroEventId) {
-        const media = el.hero.querySelector(".hero-media");
-        if (media) media.style.backgroundImage = `url("${encodeURI(movie.backdrop)}")`;
+        const art = el.hero.querySelector(".hero-art");
+        if (art) art.style.backgroundImage = `url("${encodeURI(movie.backdrop)}")`;
       }
     }
   };
@@ -1186,17 +1205,18 @@ el.retryBtn.addEventListener("click", async () => {
 function hideSplash() {
   el.splash.classList.add("is-hidden");
   document.body.classList.remove("is-booting");
-  setTimeout(() => el.splash.remove(), 500);
+  setTimeout(() => el.splash.remove(), 520);
 }
 
 (async function boot() {
   updateDevUI();
   selectTab("upcoming");
+  syncChrome();
   const started = Date.now();
   await loadEvents();
+  syncChrome();
   // Show the splash long enough not to flash, but never longer than needed.
-  const wait = Math.max(0, 450 - (Date.now() - started));
-  setTimeout(hideSplash, wait);
+  setTimeout(hideSplash, Math.max(0, 450 - (Date.now() - started)));
 })();
 
 // Whatever happens, never leave the user staring at the splash.
