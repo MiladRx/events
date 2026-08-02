@@ -2,14 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- viewport-fit=cover for notch/safe areas. Pinch-zoom is intentionally left
-       enabled (no maximum-scale / user-scalable=no) — blocking it breaks
-       accessibility and iOS ignores it anyway. -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="dark" />
-  <meta name="theme-color" content="#08090e" />
+  <meta name="theme-color" content="#000000" />
   <meta name="description" content="Track your upcoming events with a live countdown." />
-  <!-- Stop iOS from turning dates/times in event text into tappable links -->
   <meta name="format-detection" content="telephone=no,date=no,address=no,email=no" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -24,100 +20,90 @@
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body class="is-booting">
-  <!-- Splash -->
   <div id="splash" class="splash" role="status" aria-label="Loading">
-    <div class="splash-mark">
-      <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true">
-        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6" />
-        <path d="M10.2 8.4 16 12l-5.8 3.6z" fill="currentColor" />
-      </svg>
-    </div>
-    <div class="spinner" aria-hidden="true"></div>
+    <div class="splash-orb" aria-hidden="true"></div>
   </div>
 
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <!-- Top bar -->
-  <header class="topbar">
-    <div class="shell topbar-inner">
-      <div class="brand">
-        <span class="brand-glyph" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="18" height="18">
-            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8" />
-            <path d="M10.2 8.4 16 12l-5.8 3.6z" fill="currentColor" />
-          </svg>
-        </span>
-        <h1 class="brand-name">Upcoming</h1>
-      </div>
-      <button id="devBtn" class="dev-btn" type="button" aria-pressed="false">
-        <svg class="dev-icon" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
-          <path class="dev-shackle" d="M8 10V7.5a4 4 0 0 1 8 0V10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-          <rect x="5" y="10" width="14" height="10" rx="3" fill="currentColor" />
+  <!-- Floating glass navigation bar -->
+  <header id="nav" class="nav">
+    <div class="nav-inner">
+      <span id="navTitle" class="nav-title" aria-hidden="true">Upcoming</span>
+      <button id="devBtn" class="nav-pill" type="button" aria-pressed="false">
+        <svg class="nav-pill-icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+          <path class="dev-shackle" d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <rect x="5" y="10" width="14" height="10" rx="3.2" fill="currentColor" />
         </svg>
-        <span id="devBtnLabel" class="dev-btn-label">Dev</span>
+        <span id="devBtnLabel">Dev</span>
       </button>
     </div>
   </header>
 
-  <main id="main" class="shell main">
-    <!-- Next-up hero -->
-    <section id="hero" class="hero" hidden aria-label="Next event"></section>
-
-    <!-- List -->
-    <section class="board" aria-label="All events">
-      <div class="tabs" role="tablist" aria-label="Filter events">
-        <span class="tabs-indicator" aria-hidden="true"></span>
-        <button id="tab-upcoming" class="tab is-active" type="button" role="tab"
-                data-tab="upcoming" aria-selected="true" aria-controls="grid">
-          <span>Upcoming</span><span class="tab-count" data-count="upcoming">0</span>
-        </button>
-        <button id="tab-past" class="tab" type="button" role="tab"
-                data-tab="past" aria-selected="false" aria-controls="grid" tabindex="-1">
-          <span>Past</span><span class="tab-count" data-count="past">0</span>
-        </button>
+  <main id="main" class="main">
+    <div class="wrap">
+      <div class="masthead">
+        <h1 class="title-lg">Upcoming</h1>
+        <p id="summary" class="title-sub"></p>
       </div>
+
+      <!-- Next up -->
+      <section id="hero" class="hero" hidden aria-label="Next event"></section>
 
       <div id="grid" class="grid" role="tabpanel" aria-labelledby="tab-upcoming" tabindex="-1"></div>
 
       <div id="empty" class="state" hidden>
-        <div class="state-icon" aria-hidden="true">🎬</div>
-        <p id="emptyText" class="state-text">No upcoming events</p>
-        <p class="state-sub">Unlock Dev mode to add one.</p>
+        <p id="emptyText" class="state-text">Nothing coming up</p>
+        <p class="state-sub">Unlock Dev mode to add an event.</p>
       </div>
 
       <div id="loadError" class="state" hidden>
-        <div class="state-icon" aria-hidden="true">📡</div>
         <p class="state-text">Couldn’t load events</p>
         <p class="state-sub">Check your connection and try again.</p>
-        <button id="retryBtn" class="btn primary state-btn" type="button">Retry</button>
+        <button id="retryBtn" class="btn tinted state-btn" type="button">Retry</button>
       </div>
-    </section>
 
-    <footer class="foot">
-      <p>Movie data &amp; images from <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">TMDB</a>.</p>
-    </footer>
+      <footer class="foot">
+        <p>Movie data &amp; images from
+          <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">TMDB</a>.</p>
+      </footer>
+    </div>
   </main>
 
-  <!-- Add button -->
-  <button id="fab" class="fab" type="button" hidden aria-label="Add event">
-    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
-    </svg>
-  </button>
+  <!-- Floating glass dock -->
+  <nav id="dock" class="dock" aria-label="Event lists">
+    <div class="seg" role="tablist">
+      <span class="seg-thumb" aria-hidden="true"></span>
+      <button id="tab-upcoming" class="seg-tab is-active" type="button" role="tab"
+              data-tab="upcoming" aria-selected="true" aria-controls="grid">
+        Upcoming<span class="seg-count" data-count="upcoming">0</span>
+      </button>
+      <button id="tab-seen" class="seg-tab" type="button" role="tab"
+              data-tab="seen" aria-selected="false" aria-controls="grid" tabindex="-1">
+        Seen<span class="seg-count" data-count="seen">0</span>
+      </button>
+    </div>
+    <button id="fab" class="dock-add" type="button" hidden aria-label="Add event">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+        <path d="M12 5.5v13M5.5 12h13" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" />
+      </svg>
+    </button>
+  </nav>
 
   <!-- Add / edit sheet -->
   <div id="sheet" class="overlay" hidden>
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
-      <div class="sheet-grab" aria-hidden="true"><span></span></div>
+      <div class="grabber" aria-hidden="true"><span></span></div>
       <div class="sheet-head">
         <h2 id="sheetTitle" class="sheet-title">New event</h2>
-        <button type="button" class="icon-btn sheet-x" data-close="sheet" aria-label="Close">
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        <button type="button" class="round-btn" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
         </button>
       </div>
 
       <form id="form" class="form" novalidate>
-        <div class="field search-field">
+        <div class="field">
           <label class="label" for="movieSearch">Search movie <span class="hint">TMDB</span></label>
           <div class="input-wrap">
             <svg class="input-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
@@ -172,21 +158,21 @@
         <p id="formError" class="msg error" hidden></p>
 
         <div class="actions">
-          <button type="button" class="btn secondary" data-close="sheet">Cancel</button>
-          <button type="submit" id="submitBtn" class="btn primary">Add event</button>
+          <button type="button" class="btn plain" data-close>Cancel</button>
+          <button type="submit" id="submitBtn" class="btn tinted">Add event</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Dev unlock sheet -->
+  <!-- Dev unlock -->
   <div id="devSheet" class="overlay" hidden>
     <div class="sheet sheet-sm" role="dialog" aria-modal="true" aria-labelledby="devTitle">
-      <div class="sheet-grab" aria-hidden="true"><span></span></div>
+      <div class="grabber" aria-hidden="true"><span></span></div>
       <div class="sheet-head">
         <h2 id="devTitle" class="sheet-title">Developer access</h2>
-        <button type="button" class="icon-btn sheet-x" data-close="devSheet" aria-label="Close">
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        <button type="button" class="round-btn" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
         </button>
       </div>
       <p class="sheet-desc">Enter the password to add, edit and delete events.</p>
@@ -198,39 +184,42 @@
         </div>
         <p id="devError" class="msg error" hidden>Incorrect password</p>
         <div class="actions">
-          <button type="button" class="btn secondary" data-close="devSheet">Cancel</button>
-          <button type="submit" class="btn primary">Unlock</button>
+          <button type="button" class="btn plain" data-close>Cancel</button>
+          <button type="submit" class="btn tinted">Unlock</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Confirm dialog -->
+  <!-- Confirm -->
   <div id="confirm" class="overlay" hidden>
     <div class="sheet sheet-sm" role="alertdialog" aria-modal="true"
          aria-labelledby="confirmTitle" aria-describedby="confirmText">
-      <div class="sheet-grab" aria-hidden="true"><span></span></div>
+      <div class="grabber" aria-hidden="true"><span></span></div>
       <h2 id="confirmTitle" class="sheet-title">Delete event?</h2>
       <p id="confirmText" class="sheet-desc">This can’t be undone.</p>
       <div class="actions">
-        <button type="button" id="confirmCancel" class="btn secondary">Cancel</button>
+        <button type="button" id="confirmCancel" class="btn plain">Cancel</button>
         <button type="button" id="confirmOk" class="btn danger">Delete</button>
       </div>
     </div>
   </div>
 
-  <!-- Detail view -->
+  <!-- Detail -->
   <div id="detail" class="detail" hidden>
     <div class="detail-shell" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
-      <button id="closeDetail" class="icon-btn detail-close" type="button" aria-label="Close">
-        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      <button id="closeDetail" class="round-btn detail-close" type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
       </button>
 
-      <div class="detail-panel" id="detailPanel">
+      <div id="detailPanel" class="detail-panel">
         <div class="detail-hero">
           <img id="detailBackdrop" class="detail-backdrop" alt="" decoding="async" hidden />
-          <div class="detail-hero-fade" aria-hidden="true"></div>
-          <div class="detail-hero-body">
+          <div class="detail-scrim" aria-hidden="true"></div>
+        </div>
+
+        <div class="detail-body">
+          <div class="detail-card">
             <img id="detailPoster" class="detail-poster" alt="" decoding="async" hidden />
             <div class="detail-head">
               <h2 id="detailTitle" class="detail-title">—</h2>
@@ -238,19 +227,17 @@
               <div id="detailMeta" class="chips"></div>
             </div>
           </div>
-        </div>
 
-        <div class="detail-body">
-          <div id="detailEvent" class="detail-event"></div>
+          <div id="detailEvent" class="detail-when-block"></div>
 
           <div class="detail-cta">
-            <a id="trailerBtn" class="btn primary trailer-btn" target="_blank" rel="noopener noreferrer" hidden>
-              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+            <a id="trailerBtn" class="btn tinted trailer-btn" target="_blank" rel="noopener noreferrer" hidden>
+              <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
               Watch trailer
             </a>
             <div id="detailDevActions" class="detail-dev" hidden>
-              <button type="button" id="detailEdit" class="btn secondary">Edit</button>
-              <button type="button" id="detailDelete" class="btn secondary danger-ghost">Delete</button>
+              <button type="button" id="detailEdit" class="btn plain">Edit</button>
+              <button type="button" id="detailDelete" class="btn plain danger-text">Delete</button>
             </div>
           </div>
 
